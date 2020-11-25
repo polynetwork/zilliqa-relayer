@@ -1,1 +1,3 @@
 api: https://dev-api.zilliqa.com
+zil_start_height: 1
+zil_scan_interval: 5

@@ -4,9 +4,12 @@ import (
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	poly "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/poly/account"
+	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 type SyncService struct {
@@ -17,25 +20,29 @@ type SyncService struct {
 	zilAccount *account.Account
 	zilSdk     *provider.Provider
 
+	cfg *config.Config
+
 	db *db.BoltDB
 }
 
-func NewSyncService(replayAccount *poly.Account, replaySdk *poly.PolySdk, zilAccount *account.Account, zilSdk *provider.Provider, path string) *SyncService {
-	if !checkIfExist(path) {
-		os.Mkdir(path, os.ModePerm)
+func NewSyncService(cfg *config.Config) *SyncService {
+	if !checkIfExist(cfg.Path) {
+		os.Mkdir(cfg.Path, os.ModePerm)
 	}
-	boltDB, err := db.NewBoltDB(path)
+	boltDB, err := db.NewBoltDB(cfg.Path)
 	if err != nil {
 		log.Fatal("cannot init bolt db")
 	}
 
 	return &SyncService{
-		relayAccount: replayAccount,
-		relaySdk:     replaySdk,
-		zilAccount:   zilAccount,
-		zilSdk:       zilSdk,
-		db:           boltDB,
+		db:  boltDB,
+		cfg: cfg,
 	}
+}
+
+func (s *SyncService) Run() {
+	go s.Zil2Poly()
+	waitToExit()
 }
 
 func checkIfExist(dir string) bool {
@@ -44,4 +51,18 @@ func checkIfExist(dir string) bool {
 		return false
 	}
 	return true
+}
+
+func waitToExit() {
+	exit := make(chan bool, 0)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	go func() {
+		for sig := range sc {
+			log.Println("Zilliqa Relayer received exit signal: %v.", sig.String())
+			close(exit)
+			break
+		}
+	}()
+	<-exit
 }
