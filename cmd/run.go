@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/service"
 	"github.com/spf13/cobra"
@@ -39,15 +38,8 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			er(err)
-		}
-
-		// Search config in home directory with name ".cobra" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".cobra")
+		viper.AddConfigPath("./")
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv()
@@ -77,6 +69,8 @@ var runCmd = &cobra.Command{
 			ZilStartHeight:  viper.GetUint32("zil_start_height"),
 			ZilScanInterval: viper.GetUint64("zil_scan_interval"),
 		}
+
+		log.Printf("config file: %+v\n", cfg)
 
 		syncService := service.NewSyncService(cfg)
 		syncService.Run()
