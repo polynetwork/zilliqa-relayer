@@ -8,10 +8,18 @@ Zilliqa Relayer is an important character of Poly cross-chain interactive protoc
 
 - [Golang](https://golang.org/doc/install) version 1.14 or later
 
+### Build
+
 ```shell
 git clone https://github.com/polynetwork/zil-relayer.git
 cd zil-relayer
 ./build.sh
+```
+
+### Build Docker Image
+
+```
+docker build -t polynetwork/zilliqa-relayer -f Dockerfile ./
 ```
 
 After building the source code successfully,  you should see the executable program `zilliqa-relayer`.

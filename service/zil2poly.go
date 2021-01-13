@@ -45,7 +45,7 @@ func (s *SyncService) handleBlockHeader(height uint64) bool {
 
 // the workflow is: user -> LockProxy on zilliqa -> Cross Chain Manager -> emit event
 // so here we need to filter out those transactions related to cross chain manager
-// and parse the events, commit them to the polynetwork
+// and parse the events, store them to local db, and commit them to the polynetwork
 func (s *SyncService) fetchLockDepositEvents(height uint64) bool {
 	transactions, err := s.zilSdk.GetTxnBodiesForTxBlock(strconv.FormatUint(height, 10))
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *SyncService) MonitorChain() {
 				log.Infof("MonitorChain - cannot parse block height, err: %s\n", err2.Error())
 			}
 			if s.currentHeight >= blockNumber {
-				log.Infof("cuurent height is not changed, skip")
+				log.Infof("current height is not changed, skip")
 				continue
 			}
 
