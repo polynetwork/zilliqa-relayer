@@ -2,3 +2,5 @@ api: https://dev-api.zilliqa.com
 zil_start_height: 2291747
 zil_monitor_interval: 40
 corss_chain_manager_address: zil1y0mesa67hvsm92mupp9alqqevzst3ymspggj40
+poly_wallet_file: wallet.dat
+poly_wallet_pwd: dummy

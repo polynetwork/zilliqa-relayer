@@ -7,6 +7,7 @@ RUN git clone https://github.com/Zilliqa/zilliqa-relayer.git  && \
 FROM ubuntu:18.04
 WORKDIR /app
 COPY config.yaml config.yaml
+COPY wallet.dat wallet.dat
 COPY run.sh run.sh
 COPY --from=build /app/zilliqa-relayer/zilliqa-relayer zilliqa-relayer
 CMD ["/bin/bash"]
