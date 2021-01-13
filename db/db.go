@@ -57,3 +57,18 @@ func NewBoltDB(filePath string) (*BoltDB, error) {
 
 	return w, nil
 }
+
+func (w *BoltDB) PutRetry(k []byte) error {
+	w.rwLock.Lock()
+	defer w.rwLock.Unlock()
+
+	return w.db.Update(func(btx *bolt.Tx) error {
+		bucket := btx.Bucket(BKTRetry)
+		err := bucket.Put(k, []byte{0x00})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

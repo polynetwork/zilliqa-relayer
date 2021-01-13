@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/service"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
 )
 
 var cfgFile string
@@ -46,16 +44,11 @@ func initConfig() {
 
 	err := viper.ReadInConfig()
 	if err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Info("Using config file:", viper.ConfigFileUsed())
 	} else {
-		fmt.Println(err.Error())
+		log.Error(err.Error())
 	}
 
-}
-
-func er(msg interface{}) {
-	fmt.Println("Error:", msg)
-	os.Exit(1)
 }
 
 var runCmd = &cobra.Command{
@@ -65,12 +58,13 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		cfg := &config.Config{
-			ZilApiEndpoint:     viper.GetString("api"),
-			ZilStartHeight:     viper.GetUint32("zil_start_height"),
-			ZilMonitorInterval: viper.GetUint32("zil_monitor_interval"),
+			ZilApiEndpoint:            viper.GetString("api"),
+			ZilStartHeight:            viper.GetUint32("zil_start_height"),
+			ZilMonitorInterval:        viper.GetUint32("zil_monitor_interval"),
+			CrossChainManagerContract: viper.GetString("corss_chain_manager_address"),
 		}
 
-		log.Printf("config file: %+v\n", cfg)
+		log.Infof("config file: %+v\n", cfg)
 
 		syncService := service.NewSyncService(cfg)
 		syncService.Run()

@@ -6,7 +6,7 @@ import (
 	"github.com/polynetwork/poly/account"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,11 +17,13 @@ type SyncService struct {
 	relaySdk        *poly.PolySdk
 	relaySyncHeight uint32
 	zilAccount      *account.Account
-	currentHeight   uint64
-	zilSdk          *provider.Provider
-	cfg             *config.Config
-	db              *db.BoltDB
-	exitChan        chan int
+
+	currentHeight            uint64
+	zilSdk                   *provider.Provider
+	corssChainManagerAddress string
+	cfg                      *config.Config
+	db                       *db.BoltDB
+	exitChan                 chan int
 }
 
 func NewSyncService(cfg *config.Config) *SyncService {
@@ -34,10 +36,11 @@ func NewSyncService(cfg *config.Config) *SyncService {
 	}
 
 	return &SyncService{
-		db:            boltDB,
-		cfg:           cfg,
-		zilSdk:        provider.NewProvider(cfg.ZilApiEndpoint),
-		currentHeight: uint64(cfg.ZilStartHeight),
+		db:                       boltDB,
+		cfg:                      cfg,
+		zilSdk:                   provider.NewProvider(cfg.ZilApiEndpoint),
+		currentHeight:            uint64(cfg.ZilStartHeight),
+		corssChainManagerAddress: cfg.CrossChainManagerContract,
 	}
 }
 
@@ -60,7 +63,7 @@ func waitToExit() {
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	go func() {
 		for sig := range sc {
-			log.Println("Zilliqa Relayer received exit signal: %v.", sig.String())
+			log.Infof("Zilliqa Relayer received exit signal: %v.", sig.String())
 			close(exit)
 			break
 		}
