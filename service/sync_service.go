@@ -16,13 +16,12 @@ type SyncService struct {
 	relayAccount    *poly.Account
 	relaySdk        *poly.PolySdk
 	relaySyncHeight uint32
-
-	zilAccount *account.Account
-	zilSdk     *provider.Provider
-
-	cfg *config.Config
-
-	db *db.BoltDB
+	zilAccount      *account.Account
+	currentHeight   uint64
+	zilSdk          *provider.Provider
+	cfg             *config.Config
+	db              *db.BoltDB
+	exitChan        chan int
 }
 
 func NewSyncService(cfg *config.Config) *SyncService {
@@ -35,13 +34,15 @@ func NewSyncService(cfg *config.Config) *SyncService {
 	}
 
 	return &SyncService{
-		db:  boltDB,
-		cfg: cfg,
+		db:            boltDB,
+		cfg:           cfg,
+		zilSdk:        provider.NewProvider(cfg.ZilApiEndpoint),
+		currentHeight: uint64(cfg.ZilStartHeight),
 	}
 }
 
 func (s *SyncService) Run() {
-	go s.Zil2Poly()
+	go s.MonitorChain()
 	waitToExit()
 }
 

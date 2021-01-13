@@ -65,9 +65,9 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		cfg := &config.Config{
-			ZilApiEndpoint:  viper.GetString("api"),
-			ZilStartHeight:  viper.GetUint32("zil_start_height"),
-			ZilScanInterval: viper.GetUint64("zil_scan_interval"),
+			ZilApiEndpoint:     viper.GetString("api"),
+			ZilStartHeight:     viper.GetUint32("zil_start_height"),
+			ZilMonitorInterval: viper.GetUint32("zil_monitor_interval"),
 		}
 
 		log.Printf("config file: %+v\n", cfg)
