@@ -16,13 +16,16 @@ cd zil-relayer
 ./build.sh
 ```
 
+After building the source code successfully,  you should see the executable program `zilliqa-relayer`.
+
 ### Build Docker Image
 
 ```
 docker build -t polynetwork/zilliqa-relayer -f Dockerfile ./
 ```
 
-After building the source code successfully,  you should see the executable program `zilliqa-relayer`.
+This command will copy config.yaml to /app/config.yaml in the image. So you need to prepare config.yaml before running this command and you should start the zilliqa-relayer in container basing on the configuration in /app/config.yaml.
+
 
 ## Other Resources
 
