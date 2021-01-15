@@ -1,10 +1,14 @@
 package config
 
 type Config struct {
-	Path string
+	ZilConfig *ZILConfig
+	Path      string
+}
 
-	ZilMonitorInterval        uint32
+type ZILConfig struct {
 	ZilApiEndpoint            string
+	ZilMonitorInterval        uint32
 	ZilStartHeight            uint32
+	SideChainId               uint64
 	CrossChainManagerContract string
 }

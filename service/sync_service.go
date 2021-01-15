@@ -13,11 +13,10 @@ import (
 )
 
 type SyncService struct {
-	relayAccount    *poly.Account
-	relaySdk        *poly.PolySdk
-	relaySyncHeight uint32
-	zilAccount      *account.Account
-
+	polySigner               *poly.Account
+	polySdk                  *poly.PolySdk
+	relaySyncHeight          uint32
+	zilAccount               *account.Account
 	currentHeight            uint64
 	zilSdk                   *provider.Provider
 	corssChainManagerAddress string
@@ -38,14 +37,15 @@ func NewSyncService(cfg *config.Config) *SyncService {
 	return &SyncService{
 		db:                       boltDB,
 		cfg:                      cfg,
-		zilSdk:                   provider.NewProvider(cfg.ZilApiEndpoint),
-		currentHeight:            uint64(cfg.ZilStartHeight),
-		corssChainManagerAddress: cfg.CrossChainManagerContract,
+		zilSdk:                   provider.NewProvider(cfg.ZilConfig.ZilApiEndpoint),
+		currentHeight:            uint64(cfg.ZilConfig.ZilStartHeight),
+		corssChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 	}
 }
 
 func (s *SyncService) Run() {
 	go s.MonitorChain()
+	go s.MonitorDeposit()
 	waitToExit()
 }
 

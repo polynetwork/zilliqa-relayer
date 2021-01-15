@@ -1,11 +1,14 @@
 package db
 
 import (
+	"fmt"
 	"github.com/boltdb/bolt"
 	"path"
 	"strings"
 	"sync"
 )
+
+const MAX_NUM = 1000
 
 type BoltDB struct {
 	rwLock   *sync.RWMutex
@@ -71,4 +74,28 @@ func (w *BoltDB) PutRetry(k []byte) error {
 
 		return nil
 	})
+}
+
+func (w *BoltDB) GetAllRetry() ([][]byte, error) {
+	w.rwLock.Lock()
+	defer w.rwLock.Unlock()
+
+	retryList := make([][]byte, 0)
+	err := w.db.Update(func(tx *bolt.Tx) error {
+		bw := tx.Bucket(BKTRetry)
+		bw.ForEach(func(k, _ []byte) error {
+			_k := make([]byte, len(k))
+			copy(_k, k)
+			retryList = append(retryList, _k)
+			if len(retryList) >= MAX_NUM {
+				return fmt.Errorf("max num")
+			}
+			return nil
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return retryList, nil
 }

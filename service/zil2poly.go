@@ -1,10 +1,10 @@
 package service
 
 import (
-	"encoding/hex"
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
 	"math/big"
 	"strconv"
@@ -46,13 +46,6 @@ func (s *SyncService) handleBlockHeader(height uint64) bool {
 	return true
 }
 
-func EncodeBigInt(b *big.Int) string {
-	if b.Uint64() == 0 {
-		return "00"
-	}
-	return hex.EncodeToString(b.Bytes())
-}
-
 // the workflow is: user -> LockProxy on zilliqa -> Cross Chain Manager -> emit event
 // so here we need to filter out those transactions related to cross chain manager
 // and parse the events, store them to local db, and commit them to the polynetwork
@@ -77,9 +70,9 @@ func (s *SyncService) fetchLockDepositEvents(height uint64) bool {
 					case "txId":
 						index := big.NewInt(0)
 						index.SetBytes(util.DecodeHex(param.Value.(string)))
-						crossTx.txIndex = EncodeBigInt(index)
+						crossTx.txIndex = tools.EncodeBigInt(index)
 					case "toChainId":
-						toChainId,_ := strconv.ParseUint(param.Value.(string),10,32)
+						toChainId, _ := strconv.ParseUint(param.Value.(string), 10, 32)
 						crossTx.toChain = uint32(toChainId)
 					case "rawData":
 						crossTx.value = []byte(param.Value.(string))
@@ -87,7 +80,7 @@ func (s *SyncService) fetchLockDepositEvents(height uint64) bool {
 				}
 				crossTx.height = height
 				crossTx.txId = util.DecodeHex(transaction.ID)
-				log.Infof("parsed cross tx is: %+v\n",crossTx)
+				log.Infof("parsed cross tx is: %+v\n", crossTx)
 				sink := common.NewZeroCopySink(nil)
 				crossTx.Serialization(sink)
 				err1 := s.db.PutRetry(sink.Bytes())
@@ -103,8 +96,8 @@ func (s *SyncService) fetchLockDepositEvents(height uint64) bool {
 }
 
 func (s *SyncService) MonitorChain() {
-	log.Infof("start scan block at height: %d\n", s.currentHeight)
-	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilMonitorInterval) * time.Second)
+	log.Infof("MonitorChain - start scan block at height: %d\n", s.currentHeight)
+	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
 	for {
 		select {
 		case <-fetchBlockTicker.C:
@@ -113,13 +106,13 @@ func (s *SyncService) MonitorChain() {
 				log.Infof("MonitorChain - cannot get node hight, err: %s\n", err.Error())
 				continue
 			}
-			log.Infof("current tx block height: %s\n", txBlock.Header.BlockNum)
+			log.Infof("MonitorChain - current tx block height: %s\n", txBlock.Header.BlockNum)
 			blockNumber, err2 := strconv.ParseUint(txBlock.Header.BlockNum, 10, 32)
 			if err2 != nil {
 				log.Infof("MonitorChain - cannot parse block height, err: %s\n", err2.Error())
 			}
 			if s.currentHeight >= blockNumber {
-				log.Infof("current height is not changed, skip")
+				log.Infof("MonitorChain - current height is not changed, skip")
 				continue
 			}
 
@@ -130,8 +123,24 @@ func (s *SyncService) MonitorChain() {
 
 		case <-s.exitChan:
 			return
-
 		}
+	}
+}
 
+func (s *SyncService) MonitorDeposit() {
+	log.Infof("MonitorDeposit - start monitor deposit\n")
+	monitorTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
+	for {
+		select {
+		case <-monitorTicker.C:
+			txBlock, err := s.zilSdk.GetLatestTxBlock()
+			if err != nil {
+				log.Infof("MonitorDeposit - cannot get node hight, err: %s\n", err.Error())
+				continue
+			}
+			log.Infof("MonitorDeposit - current tx block height: %s\n", txBlock.Header.BlockNum)
+		case <-s.exitChan:
+			return
+		}
 	}
 }

@@ -56,12 +56,17 @@ var runCmd = &cobra.Command{
 	Short: "Run zilliqa relayer",
 	Long:  `Run zilliqa relayer`,
 	Run: func(cmd *cobra.Command, args []string) {
+		zilConfigMap := viper.GetStringMap("zil_config")
+		api := zilConfigMap["zil_api"].(string)
+		zilConfig := &config.ZILConfig{ZilApiEndpoint: api,
+			ZilStartHeight:            uint32(zilConfigMap["zil_start_height"].(int)),
+			ZilMonitorInterval:        uint32(zilConfigMap["zil_monitor_interval"].(int)),
+			SideChainId:               uint64(zilConfigMap["side_chain_id"].(int)),
+			CrossChainManagerContract: zilConfigMap["corss_chain_manager_address"].(string),
+		}
 
 		cfg := &config.Config{
-			ZilApiEndpoint:            viper.GetString("api"),
-			ZilStartHeight:            viper.GetUint32("zil_start_height"),
-			ZilMonitorInterval:        viper.GetUint32("zil_monitor_interval"),
-			CrossChainManagerContract: viper.GetString("corss_chain_manager_address"),
+			ZilConfig: zilConfig,
 		}
 
 		log.Infof("config file: %+v\n", cfg)
