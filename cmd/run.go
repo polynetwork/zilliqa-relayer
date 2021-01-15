@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/service"
 	log "github.com/sirupsen/logrus"
@@ -57,19 +58,30 @@ var runCmd = &cobra.Command{
 	Long:  `Run zilliqa relayer`,
 	Run: func(cmd *cobra.Command, args []string) {
 		zilConfigMap := viper.GetStringMap("zil_config")
-		api := zilConfigMap["zil_api"].(string)
-		zilConfig := &config.ZILConfig{ZilApiEndpoint: api,
+		zilConfig := &config.ZILConfig{
+			ZilApiEndpoint:            zilConfigMap["zil_api"].(string),
 			ZilStartHeight:            uint32(zilConfigMap["zil_start_height"].(int)),
 			ZilMonitorInterval:        uint32(zilConfigMap["zil_monitor_interval"].(int)),
 			SideChainId:               uint64(zilConfigMap["side_chain_id"].(int)),
 			CrossChainManagerContract: zilConfigMap["corss_chain_manager_address"].(string),
 		}
 
-		cfg := &config.Config{
-			ZilConfig: zilConfig,
+		polyConfigMap := viper.GetStringMap("poly_config")
+		polyConfig := &config.POLYConfig{
+			PolyWalletFile:          polyConfigMap["poly_wallet_file"].(string),
+			PolyWalletPassword:      polyConfigMap["poly_wallet_pwd"].(string),
+			EntranceContractAddress: polyConfigMap["entrance_contract_address"].(string),
+			RestUrl:                 polyConfigMap["rest_url"].(string),
 		}
 
-		log.Infof("config file: %+v\n", cfg)
+		cfg := &config.Config{
+			ZilConfig:  zilConfig,
+			PolyConfig: polyConfig,
+		}
+
+		// todo  delete it
+		cfgStr,_ := json.Marshal(cfg)
+		log.Infof("config file: %s\n", cfgStr)
 
 		syncService := service.NewSyncService(cfg)
 		syncService.Run()
