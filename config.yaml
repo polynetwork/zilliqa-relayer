@@ -1,6 +1,6 @@
-api: https://dev-api.zilliqa.com
-zil_start_height: 2291747
+api: https://polynetworkcc3dcb2-5-api.dev.z7a.xyz
+zil_start_height: 38
 zil_monitor_interval: 40
-corss_chain_manager_address: zil1y0mesa67hvsm92mupp9alqqevzst3ymspggj40
+corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
 poly_wallet_file: wallet.dat
 poly_wallet_pwd: dummy

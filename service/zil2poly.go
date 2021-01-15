@@ -1,9 +1,12 @@
 package service
 
 import (
+	"encoding/hex"
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
+	"github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/polynetwork/poly/common"
 	log "github.com/sirupsen/logrus"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -43,6 +46,13 @@ func (s *SyncService) handleBlockHeader(height uint64) bool {
 	return true
 }
 
+func EncodeBigInt(b *big.Int) string {
+	if b.Uint64() == 0 {
+		return "00"
+	}
+	return hex.EncodeToString(b.Bytes())
+}
+
 // the workflow is: user -> LockProxy on zilliqa -> Cross Chain Manager -> emit event
 // so here we need to filter out those transactions related to cross chain manager
 // and parse the events, store them to local db, and commit them to the polynetwork
@@ -54,19 +64,38 @@ func (s *SyncService) fetchLockDepositEvents(height uint64) bool {
 	}
 
 	for _, transaction := range transactions {
-		toAddr, _ := bech32.ToBech32Address(transaction.ToAddr)
-		log.Infof("to address: %s\n", toAddr)
-		if toAddr == s.corssChainManagerAddress {
-			log.Infof("found transaction to cross chain manager: %+v\n", transaction)
-			// todo parse event to struct CrossTransfer
-			crossTx := &CrossTransfer{}
-			sink := common.NewZeroCopySink(nil)
-			crossTx.Serialization(sink)
-			err1 := s.db.PutRetry(sink.Bytes())
-			if err1 != nil {
-				log.Errorf("fetchLockDepositEvents - this.db.PutRetry error: %s", err)
+		events := transaction.Receipt.EventLogs
+		for _, event := range events {
+			toAddr, _ := bech32.ToBech32Address(event.Address)
+			log.Infof("to address: %s\n", toAddr)
+			if toAddr == s.corssChainManagerAddress {
+				log.Infof("found event on cross chain manager: %+v\n", event)
+				// todo parse event to struct CrossTransfer
+				crossTx := &CrossTransfer{}
+				for _, param := range event.Params {
+					switch param.VName {
+					case "txId":
+						index := big.NewInt(0)
+						index.SetBytes(util.DecodeHex(param.Value.(string)))
+						crossTx.txIndex = EncodeBigInt(index)
+					case "toChainId":
+						toChainId,_ := strconv.ParseUint(param.Value.(string),10,32)
+						crossTx.toChain = uint32(toChainId)
+					case "rawData":
+						crossTx.value = []byte(param.Value.(string))
+					}
+				}
+				crossTx.height = height
+				crossTx.txId = util.DecodeHex(transaction.ID)
+				log.Infof("parsed cross tx is: %+v\n",crossTx)
+				sink := common.NewZeroCopySink(nil)
+				crossTx.Serialization(sink)
+				err1 := s.db.PutRetry(sink.Bytes())
+				if err1 != nil {
+					log.Errorf("fetchLockDepositEvents - this.db.PutRetry error: %s", err)
+				}
+				log.Infof("fetchLockDepositEvent -  height: %d", height)
 			}
-			log.Infof("fetchLockDepositEvent -  height: %d", height)
 		}
 	}
 
