@@ -41,12 +41,17 @@ After creation, you need to register it as a Relayer to Poly net and get consens
 Before running, you need feed the configuration file `config.yaml`.
 
 ```yaml
-api: https://dev-api.zilliqa.com
-zil_start_height: 2291747
-zil_monitor_interval: 40
-corss_chain_manager_address: zil1y0mesa67hvsm92mupp9alqqevzst3ymspggj40
-poly_wallet_file: wallet.dat
-poly_wallet_pwd: dummy
+zil_config:
+  zil_api: https://polynetworkcc3dcb2-5-api.dev.z7a.xyz
+  zil_start_height: 38
+  zil_monitor_interval: 40
+  corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
+  side_chain_id: 1
+poly_config:
+  poly_wallet_file: wallet.dat
+  poly_wallet_pwd: dummy
+  entrance_contract_address: 0300000000000000000000000000000000000000
+  rest_url: http://beta1.poly.network	
 ```
 
 ## Other Resources
