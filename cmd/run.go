@@ -80,10 +80,10 @@ var runCmd = &cobra.Command{
 		}
 
 		// todo  delete it
-		cfgStr,_ := json.Marshal(cfg)
+		cfgStr, _ := json.Marshal(cfg)
 		log.Infof("config file: %s\n", cfgStr)
 
-		syncService := service.NewSyncService(cfg)
+		syncService := service.NewZilliqaSyncManager(cfg)
 		syncService.Run()
 	},
 }

@@ -12,7 +12,7 @@ import (
 	"syscall"
 )
 
-type SyncService struct {
+type ZilliqaSyncManager struct {
 	polySigner               *poly.Account
 	polySdk                  *poly.PolySdk
 	relaySyncHeight          uint32
@@ -25,7 +25,7 @@ type SyncService struct {
 	exitChan                 chan int
 }
 
-func NewSyncService(cfg *config.Config) *SyncService {
+func NewZilliqaSyncManager(cfg *config.Config) *ZilliqaSyncManager {
 	if !checkIfExist(cfg.Path) {
 		os.Mkdir(cfg.Path, os.ModePerm)
 	}
@@ -34,7 +34,7 @@ func NewSyncService(cfg *config.Config) *SyncService {
 		log.Fatal("cannot init bolt db")
 	}
 
-	return &SyncService{
+	return &ZilliqaSyncManager{
 		db:                       boltDB,
 		cfg:                      cfg,
 		zilSdk:                   provider.NewProvider(cfg.ZilConfig.ZilApiEndpoint),
@@ -43,9 +43,17 @@ func NewSyncService(cfg *config.Config) *SyncService {
 	}
 }
 
-func (s *SyncService) Run() {
+func (s *ZilliqaSyncManager) Run() {
 	go s.MonitorChain()
 	go s.MonitorDeposit()
+	waitToExit()
+}
+
+type PolySyncManager struct {
+	cfg *config.Config
+}
+
+func (p *PolySyncManager) Run() {
 	waitToExit()
 }
 
