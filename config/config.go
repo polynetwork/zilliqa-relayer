@@ -5,9 +5,10 @@ const (
 )
 
 type Config struct {
-	ZilConfig  *ZILConfig
-	PolyConfig *POLYConfig
-	Path       string
+	ZilConfig       *ZILConfig
+	PolyConfig      *POLYConfig
+	Path            string
+	TargetContracts []map[string]map[string][]uint64
 }
 
 type ZILConfig struct {

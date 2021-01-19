@@ -55,6 +55,8 @@ type PolySyncManager struct {
 	exitChan      chan int
 	cfg           *config.Config
 	db            *db.BoltDB
+
+	zilSdk *provider.Provider
 }
 
 func (p *PolySyncManager) Run() {
