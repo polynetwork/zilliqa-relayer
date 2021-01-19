@@ -1,5 +1,9 @@
 package config
 
+const (
+	OntUsefulBlockNum = 1
+)
+
 type Config struct {
 	ZilConfig  *ZILConfig
 	PolyConfig *POLYConfig
@@ -17,6 +21,7 @@ type ZILConfig struct {
 type POLYConfig struct {
 	PolyWalletFile          string
 	PolyWalletPassword      string
+	PolyMonitorInterval     uint32
 	EntranceContractAddress string
 	RestUrl                 string
 }

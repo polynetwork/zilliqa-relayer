@@ -7,5 +7,6 @@ zil_config:
 poly_config:
   poly_wallet_file: wallet.dat
   poly_wallet_pwd: dummy
+  poly_monitor_interval: 40
   entrance_contract_address: "0300000000000000000000000000000000000000"
   rest_url: http://beta1.poly.network

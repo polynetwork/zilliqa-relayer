@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"path"
@@ -17,8 +18,9 @@ type BoltDB struct {
 }
 
 var (
-	BKTCheck = []byte("Check")
-	BKTRetry = []byte("Retry")
+	BKTCheck  = []byte("Check")
+	BKTRetry  = []byte("Retry")
+	BKTHeight = []byte("Height")
 )
 
 func NewBoltDB(filePath string) (*BoltDB, error) {
@@ -98,4 +100,17 @@ func (w *BoltDB) GetAllRetry() ([][]byte, error) {
 		return nil, err
 	}
 	return retryList, nil
+}
+
+func (w *BoltDB) UpdatePolyHeight(h uint32) error {
+	w.rwLock.Lock()
+	defer w.rwLock.Unlock()
+
+	raw := make([]byte, 4)
+	binary.LittleEndian.PutUint32(raw, h)
+
+	return w.db.Update(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(BKTHeight)
+		return bkt.Put([]byte("poly_height"), raw)
+	})
 }

@@ -70,6 +70,7 @@ var runCmd = &cobra.Command{
 		polyConfig := &config.POLYConfig{
 			PolyWalletFile:          polyConfigMap["poly_wallet_file"].(string),
 			PolyWalletPassword:      polyConfigMap["poly_wallet_pwd"].(string),
+			PolyMonitorInterval:     uint32(polyConfigMap["poly_monitor_interval"].(int)),
 			EntranceContractAddress: polyConfigMap["entrance_contract_address"].(string),
 			RestUrl:                 polyConfigMap["rest_url"].(string),
 		}

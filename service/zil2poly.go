@@ -60,7 +60,7 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 		events := transaction.Receipt.EventLogs
 		for _, event := range events {
 			toAddr, _ := bech32.ToBech32Address(event.Address)
-			if toAddr == s.corssChainManagerAddress {
+			if toAddr == s.crossChainManagerAddress {
 				log.Infof("ZilliqaSyncManager found event on cross chain manager: %+v\n", event)
 				// todo parse event to struct CrossTransfer
 				crossTx := &CrossTransfer{}
@@ -102,13 +102,13 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 		case <-fetchBlockTicker.C:
 			txBlock, err := s.zilSdk.GetLatestTxBlock()
 			if err != nil {
-				log.Infof("ZilliqaSyncManager MonitorChain - cannot get node hight, err: %s\n", err.Error())
+				log.Errorf("ZilliqaSyncManager MonitorChain - cannot get node hight, err: %s\n", err.Error())
 				continue
 			}
 			log.Infof("ZilliqaSyncManager MonitorChain - current tx block height: %s\n", txBlock.Header.BlockNum)
 			blockNumber, err2 := strconv.ParseUint(txBlock.Header.BlockNum, 10, 32)
 			if err2 != nil {
-				log.Infof("ZilliqaSyncManager MonitorChain - cannot parse block height, err: %s\n", err2.Error())
+				log.Errorf("ZilliqaSyncManager MonitorChain - cannot parse block height, err: %s\n", err2.Error())
 			}
 			if s.currentHeight >= blockNumber {
 				log.Infof("ZilliqaSyncManager MonitorChain - current height is not changed, skip")

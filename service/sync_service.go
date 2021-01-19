@@ -19,7 +19,7 @@ type ZilliqaSyncManager struct {
 	zilAccount               *account.Account
 	currentHeight            uint64
 	zilSdk                   *provider.Provider
-	corssChainManagerAddress string
+	crossChainManagerAddress string
 	cfg                      *config.Config
 	db                       *db.BoltDB
 	exitChan                 chan int
@@ -39,7 +39,7 @@ func NewZilliqaSyncManager(cfg *config.Config) *ZilliqaSyncManager {
 		cfg:                      cfg,
 		zilSdk:                   provider.NewProvider(cfg.ZilConfig.ZilApiEndpoint),
 		currentHeight:            uint64(cfg.ZilConfig.ZilStartHeight),
-		corssChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
+		crossChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 	}
 }
 
@@ -50,7 +50,11 @@ func (s *ZilliqaSyncManager) Run() {
 }
 
 type PolySyncManager struct {
-	cfg *config.Config
+	currentHeight uint32
+	polySdk       *poly.PolySdk
+	exitChan      chan int
+	cfg           *config.Config
+	db            *db.BoltDB
 }
 
 func (p *PolySyncManager) Run() {
