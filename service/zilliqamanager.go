@@ -6,8 +6,6 @@ import (
 	poly "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
-	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 type ZilliqaSyncManager struct {
@@ -23,19 +21,11 @@ type ZilliqaSyncManager struct {
 	exitChan                 chan int
 }
 
-func NewZilliqaSyncManager(cfg *config.Config) *ZilliqaSyncManager {
-	if !checkIfExist(cfg.Path) {
-		os.Mkdir(cfg.Path, os.ModePerm)
-	}
-	boltDB, err := db.NewBoltDB(cfg.Path)
-	if err != nil {
-		log.Fatal("cannot init bolt db")
-	}
-
+func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, boltDB *db.BoltDB) *ZilliqaSyncManager {
 	return &ZilliqaSyncManager{
 		db:                       boltDB,
 		cfg:                      cfg,
-		zilSdk:                   provider.NewProvider(cfg.ZilConfig.ZilApiEndpoint),
+		zilSdk:                   zilSdk,
 		currentHeight:            uint64(cfg.ZilConfig.ZilStartHeight),
 		crossChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 	}
@@ -44,5 +34,4 @@ func NewZilliqaSyncManager(cfg *config.Config) *ZilliqaSyncManager {
 func (s *ZilliqaSyncManager) Run() {
 	go s.MonitorChain()
 	go s.MonitorDeposit()
-	waitToExit()
 }

@@ -1,9 +1,11 @@
 package tools
 
 import (
+	"bufio"
 	"encoding/hex"
 	"github.com/polynetwork/poly/common"
 	"math/big"
+	"os"
 )
 
 func EncodeBigInt(b *big.Int) string {
@@ -45,4 +47,24 @@ func ParseAuditpath(path []byte) ([]byte, []byte, [][32]byte, error) {
 	}
 
 	return value, pos, hashs, nil
+}
+
+func ReadLine(path string) ([]string, error) {
+	var lines []string
+	file, err := os.Open(path)
+	if err != nil {
+		return lines, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err1 := scanner.Err(); err1 != nil {
+		return lines, err1
+	}
+
+	return lines, nil
 }

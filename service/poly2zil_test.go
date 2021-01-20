@@ -23,8 +23,8 @@ func init() {
 		cfg: &config.Config{ZilConfig: &config.ZILConfig{
 			CrossChainManagerContract: "zil1ur4vwcmcz3jqypksgq7qeju2sk5jrskzaadau5",
 		}},
-		zilSdk: zilSdk,
-		acc:    "zil1ur4vwcmcz3jqypksgq7qeju2sk5jrskzaadau5",
+		zilSdk:  zilSdk,
+		address: "zil1ur4vwcmcz3jqypksgq7qeju2sk5jrskzaadau5",
 	}
 }
 

@@ -2,11 +2,15 @@ package cmd
 
 import (
 	"encoding/json"
+	"github.com/Zilliqa/gozilliqa-sdk/provider"
+	poly_go_sdk "github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/zilliqa-relayer/config"
+	"github.com/polynetwork/zilliqa-relayer/db"
 	"github.com/polynetwork/zilliqa-relayer/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var cfgFile string
@@ -49,7 +53,24 @@ func initConfig() {
 	} else {
 		log.Error(err.Error())
 	}
+}
 
+func setUpPoly(poly *poly_go_sdk.PolySdk, RpcAddr string) error {
+	poly.NewRpcClient().SetAddress(RpcAddr)
+	hdr, err := poly.GetHeaderByHeight(0)
+	if err != nil {
+		return err
+	}
+	poly.SetChainId(hdr.ChainID)
+	return nil
+}
+
+func checkIfExist(dir string) bool {
+	_, err := os.Stat(dir)
+	if err != nil && !os.IsExist(err) {
+		return false
+	}
+	return true
 }
 
 var runCmd = &cobra.Command{
@@ -84,11 +105,37 @@ var runCmd = &cobra.Command{
 			PolyConfig: polyConfig,
 		}
 
-		// todo  delete it
 		cfgStr, _ := json.Marshal(cfg)
 		log.Infof("config file: %s\n", cfgStr)
 
-		syncService := service.NewZilliqaSyncManager(cfg)
-		syncService.Run()
+		zilSdk := provider.NewProvider(cfg.ZilConfig.ZilApiEndpoint)
+		polySdk := poly_go_sdk.NewPolySdk()
+		err1 := setUpPoly(polySdk, cfg.PolyConfig.RestUrl)
+		if err1 != nil {
+			log.Errorf("init poly sdk error: %s\n", err1.Error())
+			return
+		}
+
+		if !checkIfExist(cfg.Path) {
+			os.Mkdir(cfg.Path, os.ModePerm)
+		}
+		boltDB, err2 := db.NewBoltDB(cfg.Path)
+		if err2 != nil {
+			log.Errorf("cannot init bolt db: %s\n", err2.Error())
+			return
+		}
+
+		zilliqaManager := service.NewZilliqaSyncManager(cfg, zilSdk, boltDB)
+		polyManager, err := service.NewPolySyncManager(cfg, zilSdk, polySdk, boltDB)
+		if err != nil {
+			log.Errorf("init polymanager error: %s\n", err.Error())
+			return
+		}
+
+		zilliqaManager.Run()
+		polyManager.Run()
+
+		service.WaitToExit()
+
 	},
 }

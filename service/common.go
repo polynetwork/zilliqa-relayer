@@ -7,15 +7,7 @@ import (
 	"syscall"
 )
 
-func checkIfExist(dir string) bool {
-	_, err := os.Stat(dir)
-	if err != nil && !os.IsExist(err) {
-		return false
-	}
-	return true
-}
-
-func waitToExit() {
+func WaitToExit() {
 	exit := make(chan bool, 0)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
