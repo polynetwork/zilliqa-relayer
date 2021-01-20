@@ -60,10 +60,14 @@ var runCmd = &cobra.Command{
 		zilConfigMap := viper.GetStringMap("zil_config")
 		zilConfig := &config.ZILConfig{
 			ZilApiEndpoint:            zilConfigMap["zil_api"].(string),
+			ZilChainId:                zilConfigMap["zil_chain_id"].(int),
+			ZilMessageVersion:         zilConfigMap["zil_message_version"].(int),
 			ZilStartHeight:            uint32(zilConfigMap["zil_start_height"].(int)),
 			ZilMonitorInterval:        uint32(zilConfigMap["zil_monitor_interval"].(int)),
 			SideChainId:               uint64(zilConfigMap["side_chain_id"].(int)),
 			CrossChainManagerContract: zilConfigMap["corss_chain_manager_address"].(string),
+			KeyStorePath:              zilConfigMap["key_store_path"].(string),
+			KeyStorePwdSet:            zilConfigMap["key_store_pwd_set"].(map[string]interface{}),
 		}
 
 		polyConfigMap := viper.GetStringMap("poly_config")
