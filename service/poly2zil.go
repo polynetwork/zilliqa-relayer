@@ -162,8 +162,8 @@ type ZilSender struct {
 func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) {
 	// verifyHeaderAndExecuteTx
 	var (
-		sigs       []byte
-		headerData []byte
+		sigs []byte
+		//headerData []byte
 	)
 	if anchorHeader != nil && headerProof != "" {
 		for _, sig := range anchorHeader.SigData {
@@ -192,6 +192,47 @@ type EpochStartHeightRep struct {
 	Result  EpochStartHeight `json:"result"`
 }
 
+type FromChainTxExist struct {
+	FromChainTxExist map[string]interface{} `json:"fromChainTxExist"`
+}
+
+type FromChainTxExistRsp struct {
+	Id      string            `json:"id"`
+	JsonRpc string            `json:"jsonrpc"`
+	Result  *FromChainTxExist `json:"result"`
+}
+
+// ZilCrossChainManager.scilla
+// check fromChainTxExist map
+func (p *PolySyncManager) checkIfFromChainTxExist(fromChainId uint64, fromTx string) bool {
+	ccm, err := bech32.FromBech32Addr(p.cfg.ZilConfig.CrossChainManagerContract)
+	if err != nil {
+		log.Errorf("PolySyncManager checkIfFromChainTxExist -  failed to convert cross chain manager contract address: %s\n", err.Error())
+		return false
+	}
+
+	state, err1 := p.zilSdk.GetSmartContractSubState(ccm, "fromChainTxExist", []interface{}{strconv.FormatUint(fromChainId, 10), fromTx})
+	if err1 != nil {
+		log.Errorf("PolySyncManager checkIfFromChainTxExist - failed to get state of fromChainTxExist: %s\n", err1.Error())
+		return false
+	}
+
+	var fromChainTxExistRsp FromChainTxExistRsp
+	err2 := json.Unmarshal([]byte(state), &fromChainTxExistRsp)
+	if err2 != nil {
+		log.Errorf("PolySyncManager checkIfFromChainTxExist - failed to parse fromChainTxExistRsp: %s\n", err2.Error())
+		return false
+	}
+
+	if fromChainTxExistRsp.Result == nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+// ZilCrossChainManager.scilla
+// curEpochStartHeight
 func (p *PolySyncManager) findLatestHeight() uint32 {
 	ccm, err := bech32.FromBech32Addr(p.cfg.ZilConfig.CrossChainManagerContract)
 	if err != nil {
