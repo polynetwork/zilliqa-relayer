@@ -1,15 +1,13 @@
 package service
 
 import (
+	"github.com/Zilliqa/gozilliqa-sdk/account"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	poly "github.com/polynetwork/poly-go-sdk"
-	"github.com/polynetwork/poly/account"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 type ZilliqaSyncManager struct {
@@ -47,40 +45,4 @@ func (s *ZilliqaSyncManager) Run() {
 	go s.MonitorChain()
 	go s.MonitorDeposit()
 	waitToExit()
-}
-
-type PolySyncManager struct {
-	currentHeight uint32
-	polySdk       *poly.PolySdk
-	exitChan      chan int
-	cfg           *config.Config
-	db            *db.BoltDB
-
-	zilSdk *provider.Provider
-}
-
-func (p *PolySyncManager) Run() {
-	waitToExit()
-}
-
-func checkIfExist(dir string) bool {
-	_, err := os.Stat(dir)
-	if err != nil && !os.IsExist(err) {
-		return false
-	}
-	return true
-}
-
-func waitToExit() {
-	exit := make(chan bool, 0)
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	go func() {
-		for sig := range sc {
-			log.Infof("Zilliqa Relayer received exit signal: %v.", sig.String())
-			close(exit)
-			break
-		}
-	}()
-	<-exit
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
+	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/ontio/ontology-crypto/signature"
 	"github.com/polynetwork/poly/common"
@@ -141,9 +142,6 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 					sender.acc, event.TxHash, height)
 				// temporarily ignore the error for tx
 				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-				//if !sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath) {
-				//	return false
-				//}
 			}
 		}
 	}
@@ -152,14 +150,17 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 }
 
 func (p *PolySyncManager) selectSender() *ZilSender {
+	// todo
 	return &ZilSender{}
 }
 
 type ZilSender struct {
-	acc string
+	cfg    *config.Config
+	zilSdk *provider.Provider
+	acc    string
 }
 
-func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) {
+func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
 	// verifyHeaderAndExecuteTx
 	var (
 		sigs []byte
@@ -180,6 +181,18 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 			sigs = append(sigs, newsig...)
 		}
 	}
+
+	// todo ensure that TxHash is bytes of hash, not utf8 bytes
+	exist := sender.checkIfFromChainTxExist(param.FromChainID, util.EncodeHex(param.TxHash))
+	if exist {
+		log.Infof("ZilSender commitDepositEventsWithHeader - already relayed to zil: (from_chain_id: %d, from_txhash: %x, param.TxHash: %x\n)", param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
+		return true
+	}
+
+	// todo
+
+	return true
+
 }
 
 type EpochStartHeight struct {
@@ -204,14 +217,14 @@ type FromChainTxExistRsp struct {
 
 // ZilCrossChainManager.scilla
 // check fromChainTxExist map
-func (p *PolySyncManager) checkIfFromChainTxExist(fromChainId uint64, fromTx string) bool {
-	ccm, err := bech32.FromBech32Addr(p.cfg.ZilConfig.CrossChainManagerContract)
+func (z *ZilSender) checkIfFromChainTxExist(fromChainId uint64, fromTx string) bool {
+	ccm, err := bech32.FromBech32Addr(z.cfg.ZilConfig.CrossChainManagerContract)
 	if err != nil {
 		log.Errorf("PolySyncManager checkIfFromChainTxExist -  failed to convert cross chain manager contract address: %s\n", err.Error())
 		return false
 	}
 
-	state, err1 := p.zilSdk.GetSmartContractSubState(ccm, "fromChainTxExist", []interface{}{strconv.FormatUint(fromChainId, 10), fromTx})
+	state, err1 := z.zilSdk.GetSmartContractSubState(ccm, "fromChainTxExist", []interface{}{strconv.FormatUint(fromChainId, 10), fromTx})
 	if err1 != nil {
 		log.Errorf("PolySyncManager checkIfFromChainTxExist - failed to get state of fromChainTxExist: %s\n", err1.Error())
 		return false
