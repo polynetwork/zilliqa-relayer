@@ -144,6 +144,11 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 		}
 	}
 
+	if cnt == 0 && isEpoch && isCurr {
+		sender := p.selectSender()
+		return sender.commitHeader(hdr)
+	}
+
 	return true
 }
 
