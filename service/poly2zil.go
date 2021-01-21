@@ -148,8 +148,8 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 }
 
 func (p *PolySyncManager) selectSender() *ZilSender {
-	// todo
-	return &ZilSender{}
+	// todo considering now we only have one admin which can control the contract
+	return p.senders[0]
 }
 
 type EpochStartHeight struct {
