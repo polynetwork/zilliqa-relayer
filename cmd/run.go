@@ -80,15 +80,16 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		zilConfigMap := viper.GetStringMap("zil_config")
 		zilConfig := &config.ZILConfig{
-			ZilApiEndpoint:            zilConfigMap["zil_api"].(string),
-			ZilChainId:                zilConfigMap["zil_chain_id"].(int),
-			ZilMessageVersion:         zilConfigMap["zil_message_version"].(int),
-			ZilStartHeight:            uint32(zilConfigMap["zil_start_height"].(int)),
-			ZilMonitorInterval:        uint32(zilConfigMap["zil_monitor_interval"].(int)),
-			SideChainId:               uint64(zilConfigMap["side_chain_id"].(int)),
-			CrossChainManagerContract: zilConfigMap["corss_chain_manager_address"].(string),
-			KeyStorePath:              zilConfigMap["key_store_path"].(string),
-			KeyStorePwdSet:            zilConfigMap["key_store_pwd_set"].(map[string]interface{}),
+			ZilApiEndpoint:                 zilConfigMap["zil_api"].(string),
+			ZilChainId:                     zilConfigMap["zil_chain_id"].(int),
+			ZilMessageVersion:              zilConfigMap["zil_message_version"].(int),
+			ZilStartHeight:                 uint32(zilConfigMap["zil_start_height"].(int)),
+			ZilMonitorInterval:             uint32(zilConfigMap["zil_monitor_interval"].(int)),
+			SideChainId:                    uint64(zilConfigMap["side_chain_id"].(int)),
+			CrossChainManagerContract:      zilConfigMap["corss_chain_manager_address"].(string),
+			CrossChainManagerProxyContract: zilConfigMap["cross_chain_manager_proxy_address"].(string),
+			KeyStorePath:                   zilConfigMap["key_store_path"].(string),
+			KeyStorePwdSet:                 zilConfigMap["key_store_pwd_set"].(map[string]interface{}),
 		}
 
 		polyConfigMap := viper.GetStringMap("poly_config")
@@ -126,7 +127,7 @@ var runCmd = &cobra.Command{
 		}
 
 		zilliqaManager := service.NewZilliqaSyncManager(cfg, zilSdk, boltDB)
-		polyManager, err := service.NewPolySyncManager(cfg, zilSdk, polySdk, boltDB)
+		polyManager, err := service.NewPolySyncManager(cfg, zilSdk, polySdk, boltDB, cfg.ZilConfig.CrossChainManagerContract, cfg.ZilConfig.CrossChainManagerProxyContract)
 		if err != nil {
 			log.Errorf("init polymanager error: %s\n", err.Error())
 			return

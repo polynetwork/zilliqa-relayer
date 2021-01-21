@@ -5,6 +5,7 @@ zil_config:
   zil_start_height: 38
   zil_monitor_interval: 40
   corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
+  cross_chain_manager_proxy_address: zil1urrkyfpww7rzhxh36m9nhksr5z73ragpar53nk
   side_chain_id: 1
   key_store_path: keystore
   key_store_pwd_set:

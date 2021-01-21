@@ -3,6 +3,8 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"github.com/Zilliqa/gozilliqa-sdk/account"
+	"github.com/Zilliqa/gozilliqa-sdk/crosschain/polynetwork"
 	"github.com/Zilliqa/gozilliqa-sdk/crypto"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	"github.com/polynetwork/poly-go-sdk"
@@ -18,15 +20,17 @@ type PolySyncManager struct {
 	cfg           *config.Config
 	db            *db.BoltDB
 
-	zilSdk  *provider.Provider
-	senders []*ZilSender
+	zilSdk                 *provider.Provider
+	crossChainManager      string
+	crossChainManagerProxy string
+	senders                []*ZilSender
 }
 
 func (p *PolySyncManager) Run() {
 
 }
 
-func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *poly_go_sdk.PolySdk, boltDB *db.BoltDB) (*PolySyncManager, error) {
+func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *poly_go_sdk.PolySdk, boltDB *db.BoltDB, crossChainManager, crossChainManagerProxy string) (*PolySyncManager, error) {
 	keystores, err := tools.ReadLine(cfg.ZilConfig.KeyStorePath)
 	keystorepwdset := cfg.ZilConfig.KeyStorePwdSet
 	if err != nil {
@@ -51,24 +55,39 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 			return nil, errors.New("NewPolySyncManager - descrypt keystore error: " + err2.Error())
 		}
 
+		// init cross chain smart contract proxy
+		wallet := account.NewWallet()
+		wallet.AddByPrivateKey(privateKey)
+		proxy := &polynetwork.Proxy{
+			ProxyAddr:  crossChainManagerProxy,
+			ImplAddr:   crossChainManager,
+			Wallet:     wallet,
+			Client:     zilSdk,
+			ChainId:    cfg.ZilConfig.ZilChainId,
+			MsgVersion: cfg.ZilConfig.ZilMessageVersion,
+		}
+
 		sender := &ZilSender{
-			cfg:        cfg,
-			zilSdk:     zilSdk,
-			address:    ks.Address,
-			privateKey: privateKey,
-			polySdk:    polySdk,
+			cfg:             cfg,
+			zilSdk:          zilSdk,
+			address:         ks.Address,
+			privateKey:      privateKey,
+			polySdk:         polySdk,
+			crossChainProxy: proxy,
 		}
 
 		senders = append(senders, sender)
 	}
 
 	return &PolySyncManager{
-		currentHeight: cfg.PolyConfig.PolyMonitorInterval,
-		polySdk:       polySdk,
-		exitChan:      make(chan int),
-		cfg:           cfg,
-		db:            boltDB,
-		zilSdk:        zilSdk,
-		senders:       senders,
+		currentHeight:          cfg.PolyConfig.PolyMonitorInterval,
+		polySdk:                polySdk,
+		exitChan:               make(chan int),
+		cfg:                    cfg,
+		db:                     boltDB,
+		zilSdk:                 zilSdk,
+		crossChainManager:      crossChainManager,
+		crossChainManagerProxy: crossChainManagerProxy,
+		senders:                senders,
 	}, nil
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/Zilliqa/gozilliqa-sdk/crosschain/polynetwork"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/ontio/ontology-crypto/signature"
@@ -17,14 +18,15 @@ type ZilSender struct {
 	address    string //non-bech32 address
 	privateKey string
 
-	polySdk *poly_go_sdk.PolySdk
+	polySdk         *poly_go_sdk.PolySdk
+	crossChainProxy *polynetwork.Proxy
 }
 
 func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
 	// verifyHeaderAndExecuteTx
 	var (
-		sigs []byte
-		//headerData []byte
+		sigs       []byte
+		headerData []byte
 	)
 	if anchorHeader != nil && headerProof != "" {
 		for _, sig := range anchorHeader.SigData {
@@ -49,8 +51,27 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 		return true
 	}
 
-	// todo
+	var rawAnchor []byte
+	if anchorHeader != nil {
+		rawAnchor = anchorHeader.GetMessage()
+	}
+	headerData = header.GetMessage()
 
+	// todo carefully test this
+	pe := polynetwork.DeserializeProof(util.EncodeHex(rawAuditPath), 0)
+	rawHeader := util.EncodeHex(headerData)
+	hpe := polynetwork.DeserializeProof(headerProof, 0)
+	curRawHeader := util.EncodeHex(rawAnchor)
+	signatures, _ := polynetwork.SplitSignature(util.EncodeHex(sigs))
+
+	// todo use chan to handle result
+	transaction, err := sender.crossChainProxy.VerifyHeaderAndExecuteTx(pe, rawHeader, hpe, curRawHeader, signatures)
+	if err != nil {
+		log.Errorf("ZilSender commitDepositEventsWithHeader - failed to call VerifyHeaderAndExecuteTx: %s\n", err.Error())
+		return false
+	}
+
+	log.Infof("ZilSender commitDepositEventsWithHeader -  confirmed transaction: %s\n", transaction.ID)
 	return true
 
 }

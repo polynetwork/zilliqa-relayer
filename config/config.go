@@ -12,15 +12,16 @@ type Config struct {
 }
 
 type ZILConfig struct {
-	ZilApiEndpoint            string
-	ZilChainId                int
-	ZilMessageVersion         int
-	ZilMonitorInterval        uint32
-	ZilStartHeight            uint32
-	SideChainId               uint64
-	CrossChainManagerContract string
-	KeyStorePath              string
-	KeyStorePwdSet            map[string]interface{}
+	ZilApiEndpoint                 string
+	ZilChainId                     int
+	ZilMessageVersion              int
+	ZilMonitorInterval             uint32
+	ZilStartHeight                 uint32
+	SideChainId                    uint64
+	CrossChainManagerContract      string
+	CrossChainManagerProxyContract string
+	KeyStorePath                   string
+	KeyStorePwdSet                 map[string]interface{}
 }
 
 type POLYConfig struct {
