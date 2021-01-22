@@ -17,6 +17,11 @@ import (
 )
 
 func (p *PolySyncManager) MonitorChain() {
+	if !p.init() {
+		log.Errorf("PolySyncManager MonitorChain - init error\n")
+		return
+	}
+
 	log.Infof("PolySyncManager MonitorChain - start scan block at height: %d\n", p.currentHeight)
 	monitorTicker := time.NewTicker(time.Duration(p.cfg.PolyConfig.PolyMonitorInterval) * time.Second)
 	var blockHandleResult bool

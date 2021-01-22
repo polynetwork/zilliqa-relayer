@@ -114,3 +114,21 @@ func (w *BoltDB) UpdatePolyHeight(h uint32) error {
 		return bkt.Put([]byte("poly_height"), raw)
 	})
 }
+
+func (w *BoltDB) GetPolyHeight() uint32 {
+	w.rwLock.RLock()
+	defer w.rwLock.RUnlock()
+
+	var h uint32
+	_ = w.db.View(func(tx *bolt.Tx) error {
+		bkt := tx.Bucket(BKTHeight)
+		raw := bkt.Get([]byte("poly_height"))
+		if len(raw) == 0 {
+			h = 0
+			return nil
+		}
+		h = binary.LittleEndian.Uint32(raw)
+		return nil
+	})
+	return h
+}

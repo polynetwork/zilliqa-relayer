@@ -7,6 +7,7 @@ import (
 	"github.com/Zilliqa/gozilliqa-sdk/crosschain/polynetwork"
 	"github.com/Zilliqa/gozilliqa-sdk/crypto"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
+	"github.com/ontio/ontology/common/log"
 	"github.com/polynetwork/poly-go-sdk"
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
@@ -26,8 +27,26 @@ type PolySyncManager struct {
 	senders                []*ZilSender
 }
 
-func (p *PolySyncManager) Run() {
+func (p *PolySyncManager) init() bool {
+	if p.currentHeight > 0 {
+		log.Infof("PolySyncManager init - start height from flag: %d\n", p.currentHeight)
+		return true
+	}
 
+	p.currentHeight = p.db.GetPolyHeight()
+	latestHeight := p.findLatestHeight()
+	if latestHeight > p.currentHeight {
+		p.currentHeight = latestHeight
+		log.Infof("PolyManager init - latest height from cross chain manager: %d\n", p.currentHeight)
+		return true
+	}
+
+	log.Infof("PolyManager init - latest height from DB: %d\n", p.currentHeight)
+	return true
+}
+
+func (p *PolySyncManager) Run() {
+	go p.MonitorChain()
 }
 
 func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *poly_go_sdk.PolySdk, boltDB *db.BoltDB, crossChainManager, crossChainManagerProxy string) (*PolySyncManager, error) {
