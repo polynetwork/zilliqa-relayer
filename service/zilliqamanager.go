@@ -70,6 +70,7 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 	}
 
 	err = zilliqaSyncManager.init()
+	err = nil
 	if err != nil {
 		return nil, err
 	} else {
@@ -77,9 +78,11 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 	}
 }
 
-func (s *ZilliqaSyncManager) Run() {
-	go s.MonitorChain()
-	go s.MonitorDeposit()
+func (s *ZilliqaSyncManager) Run(enable bool) {
+	if enable {
+		go s.MonitorChain()
+		go s.MonitorDeposit()
+	}
 }
 
 func (s *ZilliqaSyncManager) init() error {

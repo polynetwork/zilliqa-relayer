@@ -1,12 +1,12 @@
 zil_config:
-  zil_api: https://polynetworkcc3dcb2-5-api.dev.z7a.xyz
+  zil_api: https://dev-api.zilliqa.com/
   zil_chain_id: 333
   zil_message_version: 1
-  zil_start_height: 38
+  zil_start_height: 0
   zil_monitor_interval: 40
   corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
   cross_chain_manager_proxy_address: zil1urrkyfpww7rzhxh36m9nhksr5z73ragpar53nk
-  side_chain_id: 1
+  side_chain_id: 2
   key_store_path: keystore
   key_store_pwd_set:
     7d48043742a1103042d327111746531ca26be9be: "xiaohuo"
@@ -14,6 +14,7 @@ zil_config:
 poly_config:
   poly_wallet_file: wallet.dat
   poly_wallet_pwd: dummy
+  poly_start_height: 0
   poly_monitor_interval: 40
   entrance_contract_address: "0300000000000000000000000000000000000000"
-  rest_url: http://beta1.poly.network
+  rest_url: http://localhost:20336

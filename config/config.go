@@ -27,6 +27,7 @@ type ZILConfig struct {
 type POLYConfig struct {
 	PolyWalletFile          string
 	PolyWalletPassword      string
+	PolyStartHeight         uint32
 	PolyMonitorInterval     uint32
 	EntranceContractAddress string
 	RestUrl                 string

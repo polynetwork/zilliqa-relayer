@@ -1,3 +1,5 @@
 zilliqa-relayer
 .idea
 bolt.bin
+config.local.yaml
+constants.xml

@@ -42,7 +42,7 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		viper.AddConfigPath("./")
-		viper.SetConfigName("config")
+		viper.SetConfigName("config.local")
 	}
 
 	viper.AutomaticEnv()
@@ -96,6 +96,7 @@ var runCmd = &cobra.Command{
 		polyConfig := &config.POLYConfig{
 			PolyWalletFile:          polyConfigMap["poly_wallet_file"].(string),
 			PolyWalletPassword:      polyConfigMap["poly_wallet_pwd"].(string),
+			PolyStartHeight:         uint32(polyConfigMap["poly_start_height"].(int)),
 			PolyMonitorInterval:     uint32(polyConfigMap["poly_monitor_interval"].(int)),
 			EntranceContractAddress: polyConfigMap["entrance_contract_address"].(string),
 			RestUrl:                 polyConfigMap["rest_url"].(string),
@@ -137,8 +138,8 @@ var runCmd = &cobra.Command{
 			return
 		}
 
-		zilliqaManager.Run()
-		polyManager.Run()
+		zilliqaManager.Run(false)
+		polyManager.Run(true)
 
 		service.WaitToExit()
 

@@ -45,8 +45,10 @@ func (p *PolySyncManager) init() bool {
 	return true
 }
 
-func (p *PolySyncManager) Run() {
-	go p.MonitorChain()
+func (p *PolySyncManager) Run(enable bool) {
+	if enable {
+		go p.MonitorChain()
+	}
 }
 
 func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *poly_go_sdk.PolySdk, boltDB *db.BoltDB, crossChainManager, crossChainManagerProxy string) (*PolySyncManager, error) {
