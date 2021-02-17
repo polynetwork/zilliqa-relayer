@@ -101,7 +101,7 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 	}
 
 	return &PolySyncManager{
-		currentHeight:          cfg.PolyConfig.PolyMonitorInterval,
+		currentHeight:          cfg.PolyConfig.PolyStartHeight,
 		polySdk:                polySdk,
 		exitChan:               make(chan int),
 		cfg:                    cfg,

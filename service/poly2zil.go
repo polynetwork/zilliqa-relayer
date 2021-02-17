@@ -63,6 +63,10 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 		log.Errorf("PolySyncManager handleBlockHeader - GetNodeHeader on height :%d failed", height)
 		return false
 	}
+	/************************* to be deleted ******************************/
+	hdrs, _ := json.Marshal(hdr)
+	log.Infof("PolySyncManager handleBlockHeader - height: %d, header: %s", height, hdrs)
+	/************************* to be deleted ******************************/
 	isCurr := lastEpoch < height+1
 	info := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, info); err != nil {
@@ -89,6 +93,10 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 		log.Errorf("PolySyncManager handleDepositEvents - get block event at height:%d error: %s", height, err.Error())
 		return false
 	}
+	/************************* to be deleted ******************************/
+	eventss, _ := json.Marshal(events)
+	log.Infof("PolySyncManager handleBlockHeader - height: %d, events: %s", height, eventss)
+	/************************* to be deleted ******************************/
 	for _, event := range events {
 		for _, notify := range event.Notify {
 			if notify.ContractAddress == p.cfg.PolyConfig.EntranceContractAddress {
@@ -232,10 +240,13 @@ func (p *PolySyncManager) findLatestHeight() uint32 {
 		return 0
 	}
 
-	height, err2 := strconv.ParseUint(epochStartHeightRep.Result.CurEpochStartHeight, 10, 32)
-	if err2 != nil {
-		log.Errorf("PolySyncManager FindLatestHeight -  faild to parse epoch start height: %s\n", err2.Error())
-		return 0
-	}
-	return uint32(height)
+	return 0
+	// todo
+	//log.Info(epochStartHeightRep.Result.CurEpochStartHeight)
+	//height, err2 := strconv.ParseUint(epochStartHeightRep.Result.CurEpochStartHeight, 10, 32)
+	//if err2 != nil {
+	//	log.Errorf("PolySyncManager FindLatestHeight -  faild to parse epoch start height: %s\n", err2.Error())
+	//	return 0
+	//}
+	//return uint32(height)
 }

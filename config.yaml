@@ -14,7 +14,8 @@ zil_config:
 poly_config:
   poly_wallet_file: wallet.dat
   poly_wallet_pwd: dummy
-  poly_start_height: 0
+  poly_start_height: 1
   poly_monitor_interval: 40
   entrance_contract_address: "0300000000000000000000000000000000000000"
   rest_url: http://localhost:20336
+  target_contracts: target_contracts.json

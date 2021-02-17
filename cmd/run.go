@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io/ioutil"
 	"os"
 )
 
@@ -79,6 +80,19 @@ var runCmd = &cobra.Command{
 	Long:  `Run zilliqa relayer`,
 	Run: func(cmd *cobra.Command, args []string) {
 		zilConfigMap := viper.GetStringMap("zil_config")
+		targetContractsPath := viper.GetString("target_contracts")
+		bytes, e := ioutil.ReadFile(targetContractsPath)
+		if e != nil {
+			log.Errorf("read target contracts error: %s, path: %s\n", e.Error(), targetContractsPath)
+			return
+		}
+		var targetContract []map[string]map[string][]uint64
+		e2 := json.Unmarshal(bytes, &targetContract)
+		if e2 != nil {
+			log.Errorf("unmarshal target contracts error: %s\n", e2.Error())
+			return
+		}
+		log.Info(targetContract)
 		zilConfig := &config.ZILConfig{
 			ZilApiEndpoint:                 zilConfigMap["zil_api"].(string),
 			ZilChainId:                     zilConfigMap["zil_chain_id"].(int),
@@ -93,6 +107,7 @@ var runCmd = &cobra.Command{
 		}
 
 		polyConfigMap := viper.GetStringMap("poly_config")
+
 		polyConfig := &config.POLYConfig{
 			PolyWalletFile:          polyConfigMap["poly_wallet_file"].(string),
 			PolyWalletPassword:      polyConfigMap["poly_wallet_pwd"].(string),
@@ -103,8 +118,9 @@ var runCmd = &cobra.Command{
 		}
 
 		cfg := &config.Config{
-			ZilConfig:  zilConfig,
-			PolyConfig: polyConfig,
+			ZilConfig:       zilConfig,
+			PolyConfig:      polyConfig,
+			TargetContracts: targetContract,
 		}
 
 		cfgStr, _ := json.Marshal(cfg)
