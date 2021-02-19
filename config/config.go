@@ -17,6 +17,7 @@ type ZILConfig struct {
 	ZilMessageVersion              int
 	ZilMonitorInterval             uint32
 	ZilStartHeight                 uint32
+	ZilForceHeight                 uint64
 	SideChainId                    uint64
 	CrossChainManagerContract      string
 	CrossChainManagerProxyContract string

@@ -125,6 +125,18 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 					// todo assuming ToContractAddress is not bech32
 					// handle error
 					toContractStr, _ := bech32.ToBech32Address(util.EncodeHex(param.MakeTxParam.ToContractAddress))
+					/************************* todo delete now ******************************/
+					//log.Info("catched!")
+					//params,_ := json.Marshal(param)
+					//log.Info(string(params))
+					//toAddr := util.EncodeHex(param.MakeTxParam.ToContractAddress)
+					//log.Info("toContract: " + toAddr)
+					//if strings.Contains(strings.ToLower(toAddr),"46de"){
+					//	os.Exit(0)
+					//} else {
+					//	break
+					//}
+					/************************* todo delete now ******************************/
 					for _, v := range p.cfg.TargetContracts {
 						toChainIdArr, ok := v[toContractStr]
 						if ok {

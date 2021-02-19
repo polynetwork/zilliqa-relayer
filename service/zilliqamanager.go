@@ -64,6 +64,7 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 		exitChan:                 make(chan int),
 		zilSdk:                   zilSdk,
 		currentHeight:            uint64(cfg.ZilConfig.ZilStartHeight),
+		forceHeight:              cfg.ZilConfig.ZilForceHeight,
 		crossChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 		polySigner:               signer,
 		polySdk:                  polysdk,
