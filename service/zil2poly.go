@@ -1,9 +1,13 @@
 package service
 
 import (
+	"bytes"
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
+	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
 	"github.com/polynetwork/poly/common"
+	scom "github.com/polynetwork/poly/native/service/header_sync/common"
+	autils "github.com/polynetwork/poly/native/service/utils"
 	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
 	"math/big"
@@ -42,7 +46,20 @@ func (s *ZilliqaSyncManager) handleNewBlock(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
-	// todo
+	log.Infof("ZilliqaSyncManager handle new block header: %d\n", height)
+	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(height, 10))
+	if err != nil {
+		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
+	}
+	hdr := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
+	hdrHash := util.Sha256(hdr.Serialize())
+	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(hdrHash))
+	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
+		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
+	if len(raw) == 0 || bytes.Equal(raw, hdrHash) {
+		// todo change header4sync to []byte (json bytes), which will require sdk to export all fields
+		s.header4sync = append(s.header4sync, hdr)
+	}
 	return true
 }
 
