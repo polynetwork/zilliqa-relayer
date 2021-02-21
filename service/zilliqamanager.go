@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/Zilliqa/gozilliqa-sdk/account"
-	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	poly "github.com/polynetwork/poly-go-sdk"
 	sdk "github.com/polynetwork/poly-go-sdk"
@@ -28,7 +27,7 @@ type ZilliqaSyncManager struct {
 	cfg                      *config.Config
 	db                       *db.BoltDB
 	exitChan                 chan int
-	header4sync              []*core.TxBlockHeader
+	header4sync              [][]byte
 }
 
 func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysdk *sdk.PolySdk, boltDB *db.BoltDB) (*ZilliqaSyncManager, error) {

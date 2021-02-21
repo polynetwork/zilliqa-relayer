@@ -100,6 +100,7 @@ var runCmd = &cobra.Command{
 			ZilStartHeight:                 uint32(zilConfigMap["zil_start_height"].(int)),
 			ZilForceHeight:                 uint64(zilConfigMap["zil_force_height"].(int)),
 			ZilMonitorInterval:             uint32(zilConfigMap["zil_monitor_interval"].(int)),
+			ZilHeadersPerBatch:             uint32(zilConfigMap["zil_headers_per_batch"].(int)),
 			SideChainId:                    uint64(zilConfigMap["side_chain_id"].(int)),
 			CrossChainManagerContract:      zilConfigMap["corss_chain_manager_address"].(string),
 			CrossChainManagerProxyContract: zilConfigMap["cross_chain_manager_proxy_address"].(string),

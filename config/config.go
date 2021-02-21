@@ -16,6 +16,7 @@ type ZILConfig struct {
 	ZilChainId                     int
 	ZilMessageVersion              int
 	ZilMonitorInterval             uint32
+	ZilHeadersPerBatch             uint32
 	ZilStartHeight                 uint32
 	ZilForceHeight                 uint64
 	SideChainId                    uint64

@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
 	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
@@ -12,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -51,16 +53,78 @@ func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	if err != nil {
 		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
 	}
-	hdr := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
-	hdrHash := util.Sha256(hdr.Serialize())
+	blockHeader := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
+	rawHdr, _ := json.Marshal(blockHeader)
+	hdrHash := util.Sha256(blockHeader.Serialize())
 	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(hdrHash))
 	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
 	if len(raw) == 0 || bytes.Equal(raw, hdrHash) {
 		// todo change header4sync to []byte (json bytes), which will require sdk to export all fields
-		s.header4sync = append(s.header4sync, hdr)
+		s.header4sync = append(s.header4sync, rawHdr)
 	}
 	return true
+}
+
+func (s *ZilliqaSyncManager) commitHeader() int {
+	tx, err := s.polySdk.Native.Hs.SyncBlockHeader(
+		s.cfg.ZilConfig.SideChainId,
+		s.polySigner.Address,
+		s.header4sync,
+		s.polySigner,
+	)
+
+	if err != nil {
+		errDesc := err.Error()
+		if strings.Contains(errDesc, "get the parent block failed") || strings.Contains(errDesc, "missing required field") {
+			log.Warnf("commitHeader - send transaction to poly chain err: %s", errDesc)
+			s.rollBackToCommAncestor()
+			return 0
+		} else {
+			log.Errorf("commitHeader - send transaction to poly chain err: %s", errDesc)
+			return 1
+		}
+	}
+
+	tick := time.NewTicker(100 * time.Millisecond)
+	var h uint32
+	for range tick.C {
+		h, _ = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
+		curr, _ := s.polySdk.GetCurrentBlockHeight()
+		if h > 0 && curr > h {
+			break
+		}
+	}
+
+	log.Infof("commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
+	s.header4sync = make([][]byte, 0)
+	return 0
+}
+
+func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
+	for ; ; s.currentHeight-- {
+		raw, err := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
+			append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(s.currentHeight)...))
+		if len(raw) == 0 || err != nil {
+			continue
+		}
+		txBlockT, err2 := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(s.currentHeight, 10))
+		if err2 != nil {
+			log.Errorf("rollBackToCommAncestor - failed to get header by number, so we wait for one second to retry: %v", err2)
+			time.Sleep(time.Second)
+			s.currentHeight++
+			continue
+		}
+		blockHeader := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
+		if bytes.Equal(util.Sha256(blockHeader.Serialize()), raw) {
+			bs, _ := json.Marshal(blockHeader)
+			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", bs, s.currentHeight)
+			break
+		}
+
+		s.header4sync = make([][]byte, 0)
+
+	}
 }
 
 // the workflow is: user -> LockProxy on zilliqa -> Cross Chain Manager -> emit event
@@ -114,6 +178,7 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 func (s *ZilliqaSyncManager) MonitorChain() {
 	log.Infof("ZilliqaSyncManager MonitorChain - start scan block at height: %d\n", s.currentHeight)
 	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
+	var blockHandleResult bool
 	for {
 		select {
 		case <-fetchBlockTicker.C:
@@ -132,9 +197,21 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				continue
 			}
 
+			blockHandleResult = true
 			for s.currentHeight < blockNumber {
 				s.handleNewBlock(s.currentHeight + 1)
 				s.currentHeight++
+
+				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
+					if res := s.commitHeader(); res != 0 {
+						blockHandleResult = false
+						break
+					}
+				}
+			}
+
+			if blockHandleResult && len(s.header4sync) > 0 {
+				s.commitHeader()
 			}
 
 		case <-s.exitChan:
