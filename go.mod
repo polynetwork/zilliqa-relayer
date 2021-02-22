@@ -3,7 +3,7 @@ module github.com/polynetwork/zilliqa-relayer
 go 1.15
 
 require (
-	github.com/Zilliqa/gozilliqa-sdk v1.2.1-0.20210221134949-c70ae6ea83ba
+	github.com/Zilliqa/gozilliqa-sdk v1.2.1-0.20210221223316-fa21b26136c3
 	github.com/boltdb/bolt v1.3.1
 	github.com/btcsuite/btcd v0.20.1-beta
 	github.com/magiconair/properties v1.8.1

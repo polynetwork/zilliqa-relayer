@@ -53,15 +53,16 @@ func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	if err != nil {
 		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
 	}
-	blockHeader := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
-	rawHdr, _ := json.Marshal(blockHeader)
-	hdrHash := util.Sha256(blockHeader.Serialize())
-	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(hdrHash))
+	block := core.NewTxBlockFromTxBlockT(txBlockT)
+	// todo actually here we need to commit block and its dscomm, in order to verify
+	rawBlock, _ := json.Marshal(block)
+
+	blockHash := util.Sha256(block.Serialize())
+	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(blockHash))
 	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	if len(raw) == 0 || bytes.Equal(raw, hdrHash) {
-		// todo change header4sync to []byte (json bytes), which will require sdk to export all fields
-		s.header4sync = append(s.header4sync, rawHdr)
+	if len(raw) == 0 || bytes.Equal(raw, blockHash) {
+		s.header4sync = append(s.header4sync, rawBlock)
 	}
 	return true
 }
@@ -133,8 +134,13 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 	transactions, err := s.zilSdk.GetTxnBodiesForTxBlock(strconv.FormatUint(height, 10))
 	if err != nil {
-		log.Infof("ZilliqaSyncManager get transactions for tx block %d failed: %s\n", height, err.Error())
-		return false
+		if strings.Contains(err.Error(), "TxBlock has no transactions") {
+			log.Infof("ZilliqaSyncManager no transaction in block %d\n", height)
+			return true
+		} else {
+			log.Infof("ZilliqaSyncManager get transactions for tx block %d failed: %s\n", height, err.Error())
+			return false
+		}
 	}
 
 	for _, transaction := range transactions {
@@ -202,16 +208,19 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				s.handleNewBlock(s.currentHeight + 1)
 				s.currentHeight++
 
+				// todo enable this
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
-					if res := s.commitHeader(); res != 0 {
-						blockHandleResult = false
-						break
-					}
+					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
+					//if res := s.commitHeader(); res != 0 {
+					//	blockHandleResult = false
+					//	break
+					//}
 				}
 			}
 
 			if blockHandleResult && len(s.header4sync) > 0 {
-				s.commitHeader()
+				// todo enable this
+				// s.commitHeader()
 			}
 
 		case <-s.exitChan:
