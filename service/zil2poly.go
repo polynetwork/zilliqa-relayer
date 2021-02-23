@@ -382,20 +382,3 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 
 	}
 }
-func (s *ZilliqaSyncManager) MonitorDeposit() {
-	log.Infof("ZilliqaSyncManager MonitorDeposit - start monitor deposit\n")
-	monitorTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
-	for {
-		select {
-		case <-monitorTicker.C:
-			txBlock, err := s.zilSdk.GetLatestTxBlock()
-			if err != nil {
-				log.Infof("ZilliqaSyncManager MonitorDeposit - cannot get node hight, err: %s\n", err.Error())
-				continue
-			}
-			log.Infof("ZilliqaSyncManager MonitorDeposit - current tx block height: %s\n", txBlock.Header.BlockNum)
-		case <-s.exitChan:
-			return
-		}
-	}
-}

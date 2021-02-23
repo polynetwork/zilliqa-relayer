@@ -84,7 +84,6 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 func (s *ZilliqaSyncManager) Run(enable bool) {
 	if enable {
 		go s.MonitorChain()
-		//go s.MonitorDeposit()
 	}
 }
 
