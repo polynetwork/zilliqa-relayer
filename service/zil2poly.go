@@ -54,16 +54,15 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				// todo enable this
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
-					//if res := s.commitHeader(); res != 0 {
-					//	blockHandleResult = false
-					//	break
-					//}
+					if res := s.commitHeader(); res != 0 {
+						blockHandleResult = false
+						break
+					}
 				}
 			}
 
 			if blockHandleResult && len(s.header4sync) > 0 {
-				// todo enable this
-				// s.commitHeader()
+				s.commitHeader()
 			}
 
 		case <-s.exitChan:
@@ -95,8 +94,6 @@ func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	}
 	txBlock := core.NewTxBlockFromTxBlockT(txBlockT)
 
-	// todo consider very special case
-	// tx block revert to last ds epoch, but ds block don't
 	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
 		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
 		if err != nil {
@@ -377,8 +374,19 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", bs, s.currentHeight)
 			break
 		}
-
-		s.header4sync = make([][]byte, 0)
-
 	}
+
+	s.header4sync = make([][]byte, 0)
+	txBlock, err := s.zilSdk.GetTxBlock(strconv.FormatUint(s.currentHeight, 10))
+	if err != nil {
+		log.Warnf("rollBackToCommAncestor, fail to get tx block, err: %s\n", err)
+	}
+
+	dsNum, err2 := strconv.ParseUint(txBlock.Header.DSBlockNum, 64, 10)
+	if err2 != nil {
+		log.Warnf("rollBackToCommAncestor, fail to parse ds num, err: %s\n", err2)
+	}
+
+	s.currentDsBlockNum = dsNum
+
 }
