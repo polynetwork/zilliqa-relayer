@@ -48,16 +48,39 @@ func (s *ZilliqaSyncManager) handleNewBlock(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
-	log.Infof("ZilliqaSyncManager handle new block header: %d\n", height)
+	log.Infof("ZilliqaSyncManager handle new block header height is: %d\n", height)
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(height, 10))
 	if err != nil {
 		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
+		return false
 	}
-	block := core.NewTxBlockFromTxBlockT(txBlockT)
-	// todo actually here we need to commit block and its dscomm, in order to verify
-	rawBlock, _ := json.Marshal(block)
+	txBlock := core.NewTxBlockFromTxBlockT(txBlockT)
 
-	blockHash := util.Sha256(block.Serialize())
+	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
+		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
+		if err != nil {
+			log.Errorf("ZilliqaSyncManager - handleBlockHeader get ds block error: %s", err)
+			return false
+		}
+		txBlockOrDsBlock := core.TxBlockOrDsBlock{
+			DsBlock: core.NewDsBlockFromDsBlockT(dsBlock),
+		}
+		rawBlock, _ := json.Marshal(txBlockOrDsBlock)
+		log.Infof("ZilliqaSyncManager handle new block header: %s\n", rawBlock)
+		s.header4sync = append(s.header4sync, rawBlock)
+		s.currentDsBlockNum++
+	}
+
+	txBlockOrDsBlock := core.TxBlockOrDsBlock{
+		TxBlock: txBlock,
+	}
+	rawBlock, err2 := json.Marshal(txBlockOrDsBlock)
+	if err2 != nil {
+		log.Errorf("ZilliqaSyncManager - handleBlockHeader marshal block error: %s", err2)
+		return false
+	}
+	log.Debugf("ZilliqaSyncManager handle new block header: %s\n", rawBlock)
+	blockHash := txBlock.BlockHash[:]
 	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(blockHash))
 	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
@@ -126,6 +149,20 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 		s.header4sync = make([][]byte, 0)
 
 	}
+}
+
+
+// should be the same as relayer side
+type ZILProof struct {
+	AccountProof  []string       `json:"accountProof"`
+	StorageProofs []StorageProof `json:"storageProof"`
+}
+
+// key should be storage key (in zilliqa)
+type StorageProof struct {
+	Key   []byte   `json:"key"`
+	Value []byte   `json:"value"`
+	Proof []string `json:"proof"`
 }
 
 // the workflow is: user -> LockProxy on zilliqa -> Cross Chain Manager -> emit event

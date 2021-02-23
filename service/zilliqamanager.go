@@ -21,6 +21,7 @@ type ZilliqaSyncManager struct {
 	relaySyncHeight          uint32
 	zilAccount               *account.Account
 	currentHeight            uint64
+	currentDsBlockNum        uint64
 	forceHeight              uint64
 	zilSdk                   *provider.Provider
 	crossChainManagerAddress string
