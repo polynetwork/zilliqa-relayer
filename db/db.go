@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"path"
@@ -70,6 +71,39 @@ func (w *BoltDB) PutRetry(k []byte) error {
 	return w.db.Update(func(btx *bolt.Tx) error {
 		bucket := btx.Bucket(BKTRetry)
 		err := bucket.Put(k, []byte{0x00})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (w *BoltDB) DeleteRetry(k []byte) error {
+	w.rwLock.Lock()
+	defer w.rwLock.Unlock()
+
+	return w.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(BKTRetry)
+		err := bucket.Delete(k)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (w *BoltDB) PutCheck(txHash string, v []byte) error {
+	w.rwLock.Lock()
+	defer w.rwLock.Unlock()
+
+	k, err := hex.DecodeString(txHash)
+	if err != nil {
+		return err
+	}
+	return w.db.Update(func(btx *bolt.Tx) error {
+		bucket := btx.Bucket(BKTCheck)
+		err := bucket.Put(k, v)
 		if err != nil {
 			return err
 		}
