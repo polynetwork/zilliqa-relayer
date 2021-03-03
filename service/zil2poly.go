@@ -51,7 +51,6 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				s.handleNewBlock(s.currentHeight + 1)
 				s.currentHeight++
 
-				// todo enable this
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
 					if res := s.commitHeader(); res != 0 {

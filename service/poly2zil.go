@@ -63,10 +63,6 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 		log.Errorf("PolySyncManager handleBlockHeader - GetNodeHeader on height :%d failed", height)
 		return false
 	}
-	/************************* to be deleted ******************************/
-	hdrs, _ := json.Marshal(hdr)
-	log.Infof("PolySyncManager handleBlockHeader - height: %d, header: %s", height, hdrs)
-	/************************* to be deleted ******************************/
 	isCurr := lastEpoch < height+1
 	info := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(hdr.ConsensusPayload, info); err != nil {
@@ -93,10 +89,6 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 		log.Errorf("PolySyncManager handleDepositEvents - get block event at height:%d error: %s", height, err.Error())
 		return false
 	}
-	/************************* to be deleted ******************************/
-	eventss, _ := json.Marshal(events)
-	log.Infof("PolySyncManager handleBlockHeader - height: %d, events: %s", height, eventss)
-	/************************* to be deleted ******************************/
 	for _, event := range events {
 		for _, notify := range event.Notify {
 			if notify.ContractAddress == p.cfg.PolyConfig.EntranceContractAddress {
@@ -125,18 +117,6 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 					// todo assuming ToContractAddress is not bech32
 					// handle error
 					toContractStr, _ := bech32.ToBech32Address(util.EncodeHex(param.MakeTxParam.ToContractAddress))
-					/************************* todo delete now ******************************/
-					//log.Info("catched!")
-					//params,_ := json.Marshal(param)
-					//log.Info(string(params))
-					//toAddr := util.EncodeHex(param.MakeTxParam.ToContractAddress)
-					//log.Info("toContract: " + toAddr)
-					//if strings.Contains(strings.ToLower(toAddr),"46de"){
-					//	os.Exit(0)
-					//} else {
-					//	break
-					//}
-					/************************* todo delete now ******************************/
 					for _, v := range p.cfg.TargetContracts {
 						toChainIdArr, ok := v[toContractStr]
 						if ok {

@@ -20,19 +20,19 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
 
-	runCmd.Flags().String("api", "https://api.zilliqa.com", "zilliqa api endpoint")
-	if err := viper.BindPFlag("api", runCmd.Flags().Lookup("api")); err != nil {
-		log.Fatal("Unable to bind flag:", err)
-	}
-	runCmd.Flags().String("zil_start_height", "1", "the from block number will be syncing to poly network")
-	if err := viper.BindPFlag("api", runCmd.Flags().Lookup("zil_start_height")); err != nil {
-		log.Fatal("Unable to bind flag:", err)
-	}
-
-	runCmd.Flags().String("zil_scan_interval", "2", "the interval scanning zilliqa block")
-	if err := viper.BindPFlag("zil_scan_interval", runCmd.Flags().Lookup("zil_scan_interval")); err != nil {
-		log.Fatal("Unable to bind flag:", err)
-	}
+	//runCmd.Flags().String("api", "https://api.zilliqa.com", "zilliqa api endpoint")
+	//if err := viper.BindPFlag("api", runCmd.Flags().Lookup("api")); err != nil {
+	//	log.Fatal("Unable to bind flag:", err)
+	//}
+	//runCmd.Flags().String("zil_start_height", "1", "the from block number will be syncing to poly network")
+	//if err := viper.BindPFlag("api", runCmd.Flags().Lookup("zil_start_height")); err != nil {
+	//	log.Fatal("Unable to bind flag:", err)
+	//}
+	//
+	//runCmd.Flags().String("zil_scan_interval", "2", "the interval scanning zilliqa block")
+	//if err := viper.BindPFlag("zil_scan_interval", runCmd.Flags().Lookup("zil_scan_interval")); err != nil {
+	//	log.Fatal("Unable to bind flag:", err)
+	//}
 
 	RootCmd.AddCommand(runCmd)
 }
@@ -156,8 +156,8 @@ var runCmd = &cobra.Command{
 			return
 		}
 
-		zilliqaManager.Run(true)
-		polyManager.Run(false)
+		zilliqaManager.Run(false)
+		polyManager.Run(true)
 
 		service.WaitToExit()
 

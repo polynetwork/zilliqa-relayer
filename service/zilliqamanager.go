@@ -13,8 +13,12 @@ import (
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 )
 
+/**
+ * currentHeight's source is either from poly remote storage or forceHeight
+ */
 type ZilliqaSyncManager struct {
 	polySigner               *poly.Account
 	polySdk                  *poly.PolySdk
@@ -73,7 +77,6 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 	}
 
 	err = zilliqaSyncManager.init()
-	err = nil
 	if err != nil {
 		return nil, err
 	} else {
@@ -88,8 +91,8 @@ func (s *ZilliqaSyncManager) Run(enable bool) {
 }
 
 func (s *ZilliqaSyncManager) init() error {
-	// get latest height
-	latestHeight := s.findLatestHeight()
+	// get latest tx block from remote poly storage, thus we can know current tx block num and ds block num
+	latestHeight := s.findLatestTxBlockHeight()
 	if latestHeight == 0 {
 		return fmt.Errorf("init - the genesis block has not synced!")
 	}
@@ -99,11 +102,18 @@ func (s *ZilliqaSyncManager) init() error {
 		s.currentHeight = latestHeight
 	}
 	log.Infof("ZilliqaSyncManager init - start height: %d", s.currentHeight)
+
+	txBlockHeight := strconv.FormatUint(s.currentHeight, 10)
+	txBlockT, err := s.zilSdk.GetTxBlockVerbose(txBlockHeight)
+	if err != nil {
+		return fmt.Errorf("init - get tx block error: %s", err.Error())
+	}
+	dsBlockNum, _ := strconv.ParseUint(txBlockT.Header.DSBlockNum, 10, 64)
+	s.currentDsBlockNum = dsBlockNum
 	return nil
 }
 
-// get latest height from polynetwork
-func (s *ZilliqaSyncManager) findLatestHeight() uint64 {
+func (s *ZilliqaSyncManager) findLatestTxBlockHeight() uint64 {
 	// try to get key
 	var sideChainIdBytes [8]byte
 	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
@@ -112,6 +122,7 @@ func (s *ZilliqaSyncManager) findLatestHeight() uint64 {
 	// try to get storage
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
 	if err != nil {
+		log.Printf("get latest tx block from poly failed,err: %s\n",err.Error())
 		return 0
 	}
 	if result == nil || len(result) == 0 {
