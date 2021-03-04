@@ -3,3 +3,4 @@ zilliqa-relayer
 bolt.bin
 config.local.yaml
 constants.xml
+cross_chain_manager_admin.json

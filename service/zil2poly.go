@@ -25,6 +25,17 @@ import (
  * 3. from database, handle deposit event, get proof and commit to poly
  */
 func (s *ZilliqaSyncManager) MonitorChain() {
+	// todo delete me
+	//temp solution to commit miss block
+	//a,_ := s.zilSdk.GetDsBlockVerbose("4")
+	//b := core.NewDsBlockFromDsBlockT(a)
+	//txBlockOrDsBlock := core.TxBlockOrDsBlock{
+	//	DsBlock: b,
+	//}
+	//rawBlock, _ := json.Marshal(txBlockOrDsBlock)
+	//s.header4sync = append(s.header4sync,rawBlock)
+	// todo delete me
+
 	log.Infof("ZilliqaSyncManager MonitorChain - start scan block at height: %d\n", s.currentHeight)
 	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
 	var blockHandleResult bool
@@ -319,6 +330,19 @@ func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error 
 }
 
 func (s *ZilliqaSyncManager) commitHeader() int {
+	// maybe delete this after it is stable
+	for _, raw := range s.header4sync {
+		var block core.TxBlockOrDsBlock
+		_ = json.Unmarshal(raw, &block)
+		if block.TxBlock != nil {
+			log.Infof("ZilliqaSyncManager commitHeader - about to commit tx block: %d\n", block.TxBlock.BlockHeader.BlockNum)
+		}
+
+		if block.DsBlock != nil {
+			log.Infof("ZilliqaSyncManager commitHeader - about to commit ds block: %d\n", block.DsBlock.BlockHeader.BlockNum)
+		}
+	}
+
 	tx, err := s.polySdk.Native.Hs.SyncBlockHeader(
 		s.cfg.ZilConfig.SideChainId,
 		s.polySigner.Address,
@@ -329,11 +353,11 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	if err != nil {
 		errDesc := err.Error()
 		if strings.Contains(errDesc, "get the parent block failed") || strings.Contains(errDesc, "missing required field") {
-			log.Warnf("commitHeader - send transaction to poly chain err: %s", errDesc)
+			log.Warnf("ZilliqaSyncManager commitHeader - send transaction to poly chain err: %s", errDesc)
 			s.rollBackToCommAncestor()
 			return 0
 		} else {
-			log.Errorf("commitHeader - send transaction to poly chain err: %s", errDesc)
+			log.Errorf("ZilliqaSyncManager commitHeader - send transaction to poly chain err: %s", errDesc)
 			return 1
 		}
 	}
@@ -348,7 +372,7 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 		}
 	}
 
-	log.Infof("commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
+	log.Infof("ZilliqaSyncManager commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
 	s.header4sync = make([][]byte, 0)
 	return 0
 }

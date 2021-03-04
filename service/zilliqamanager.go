@@ -69,7 +69,6 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 		cfg:                      cfg,
 		exitChan:                 make(chan int),
 		zilSdk:                   zilSdk,
-		currentHeight:            uint64(cfg.ZilConfig.ZilStartHeight),
 		forceHeight:              cfg.ZilConfig.ZilForceHeight,
 		crossChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 		polySigner:               signer,
@@ -93,9 +92,12 @@ func (s *ZilliqaSyncManager) Run(enable bool) {
 func (s *ZilliqaSyncManager) init() error {
 	// get latest tx block from remote poly storage, thus we can know current tx block num and ds block num
 	latestHeight := s.findLatestTxBlockHeight()
+	log.Infof("ZilliqaSyncManager init - get latest tx block from poly, tx block height is: %d\n", latestHeight)
+
 	if latestHeight == 0 {
-		return fmt.Errorf("init - the genesis block has not synced!")
+		return fmt.Errorf("ZilliqaSyncManager init - the genesis block has not synced!")
 	}
+
 	if s.forceHeight > 0 && s.forceHeight < latestHeight {
 		s.currentHeight = s.forceHeight
 	} else {
@@ -103,13 +105,13 @@ func (s *ZilliqaSyncManager) init() error {
 	}
 	log.Infof("ZilliqaSyncManager init - start height: %d", s.currentHeight)
 
-	txBlockHeight := strconv.FormatUint(s.currentHeight, 10)
-	txBlockT, err := s.zilSdk.GetTxBlockVerbose(txBlockHeight)
+	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(s.currentHeight, 10))
 	if err != nil {
-		return fmt.Errorf("init - get tx block error: %s", err.Error())
+		return fmt.Errorf("ZilliqaSyncManager init - get tx block error: %s", err.Error())
 	}
 	dsBlockNum, _ := strconv.ParseUint(txBlockT.Header.DSBlockNum, 10, 64)
 	s.currentDsBlockNum = dsBlockNum
+	log.Infof("ZilliqaSyncManager init - current ds block height is: %d\n", s.currentDsBlockNum)
 	return nil
 }
 
@@ -122,7 +124,7 @@ func (s *ZilliqaSyncManager) findLatestTxBlockHeight() uint64 {
 	// try to get storage
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
 	if err != nil {
-		log.Printf("get latest tx block from poly failed,err: %s\n",err.Error())
+		log.Printf("get latest tx block from poly failed,err: %s\n", err.Error())
 		return 0
 	}
 	if result == nil || len(result) == 0 {

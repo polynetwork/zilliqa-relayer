@@ -97,7 +97,6 @@ var runCmd = &cobra.Command{
 			ZilApiEndpoint:                 zilConfigMap["zil_api"].(string),
 			ZilChainId:                     zilConfigMap["zil_chain_id"].(int),
 			ZilMessageVersion:              zilConfigMap["zil_message_version"].(int),
-			ZilStartHeight:                 uint32(zilConfigMap["zil_start_height"].(int)),
 			ZilForceHeight:                 uint64(zilConfigMap["zil_force_height"].(int)),
 			ZilMonitorInterval:             uint32(zilConfigMap["zil_monitor_interval"].(int)),
 			ZilHeadersPerBatch:             uint32(zilConfigMap["zil_headers_per_batch"].(int)),
@@ -156,8 +155,8 @@ var runCmd = &cobra.Command{
 			return
 		}
 
-		zilliqaManager.Run(false)
-		polyManager.Run(true)
+		zilliqaManager.Run(true)
+		polyManager.Run(false)
 
 		service.WaitToExit()
 
