@@ -25,17 +25,6 @@ import (
  * 3. from database, handle deposit event, get proof and commit to poly
  */
 func (s *ZilliqaSyncManager) MonitorChain() {
-	// todo delete me
-	//temp solution to commit miss block
-	//a,_ := s.zilSdk.GetDsBlockVerbose("4")
-	//b := core.NewDsBlockFromDsBlockT(a)
-	//txBlockOrDsBlock := core.TxBlockOrDsBlock{
-	//	DsBlock: b,
-	//}
-	//rawBlock, _ := json.Marshal(txBlockOrDsBlock)
-	//s.header4sync = append(s.header4sync,rawBlock)
-	// todo delete me
-
 	log.Infof("ZilliqaSyncManager MonitorChain - start scan block at height: %d\n", s.currentHeight)
 	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
 	var blockHandleResult bool
@@ -154,10 +143,18 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 	}
 
 	for _, transaction := range transactions {
+		if !transaction.Receipt.Success {
+			continue
+		}
 		events := transaction.Receipt.EventLogs
 		for _, event := range events {
+			// 1. contract address should be cross chain manager
+			// 2. event name should be CrossChainEvent
 			toAddr, _ := bech32.ToBech32Address(event.Address)
 			if toAddr == s.crossChainManagerAddress {
+				if event.EventName != "CrossChainEvent" {
+					continue
+				}
 				log.Infof("ZilliqaSyncManager found event on cross chain manager: %+v\n", event)
 				// todo parse event to struct CrossTransfer
 				crossTx := &CrossTransfer{}
@@ -170,7 +167,7 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 					case "toChainId":
 						toChainId, _ := strconv.ParseUint(param.Value.(string), 10, 32)
 						crossTx.toChain = uint32(toChainId)
-					case "rawData":
+					case "rawdata":
 						crossTx.value = util.DecodeHex(param.Value.(string))
 					}
 				}
@@ -184,6 +181,8 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 					log.Errorf("ZilliqaSyncManager fetchLockDepositEvents - this.db.PutRetry error: %s", err)
 				}
 				log.Infof("ZilliqaSyncManager fetchLockDepositEvent -  height: %d", height)
+			} else {
+				log.Infof("ZilliqaSyncManager found event but not on cross chain manager, ignore: %+v\n", event)
 			}
 		}
 	}
@@ -192,6 +191,7 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
+	log.Infof("ZilliqaSyncManager handleLockDepositEvents - height is %s", height)
 	retryList, err := s.db.GetAllRetry()
 	if err != nil {
 		return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - this.db.GetAllRetry error: %s", err)
@@ -206,17 +206,23 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		}
 		heightString := new(string)
 		*heightString = strconv.FormatUint(height, 10)
-		proof, err := s.zilSdk.GetStateProof(s.cfg.ZilConfig.CrossChainManagerContract, "zilToPolyTxHashMap", []string{crosstx.txIndex}, heightString)
+		ccmc,_ :=  bech32.FromBech32Addr(s.cfg.ZilConfig.CrossChainManagerContract)
+		txIndexBigInt,_ := new(big.Int).SetString(crosstx.txIndex,16)
+		txIndexDecimal := txIndexBigInt.String()
+		proof, err := s.zilSdk.GetStateProof(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal}, heightString)
 		if err != nil {
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", err)
 		}
+		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof,height)
 
 		zilProof := &ZILProof{
 			AccountProof: proof.AccountProof,
 		}
 
+		skey := core.GenerateStorageKey("zilToPolyTxHashMap", []string{txIndexDecimal})
+		hexskey := util.EncodeHex(skey)
 		storageProof := StorageProof{
-			Key:   core.GenerateStorageKey("zilToPolyTxHashMap", []string{crosstx.txIndex}),
+			Key:   []byte(hexskey),
 			Value: crosstx.value,
 			Proof: proof.StateProof,
 		}
@@ -247,7 +253,7 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 				if strings.Contains(err.Error(), "tx already done") {
 					log.Debugf("ZilliqaSyncManager - handleLockDepositEvents handleLockDepositEvents handleLockDepositEvents - eth_tx %s already on poly", util.EncodeHex(crosstx.txId))
 				} else {
-					log.Errorf("ZilliqaSyncManager handleLockDepositEvents invokeNativeContract error for eth_tx %s: %s", util.EncodeHex(crosstx.txId), err)
+					log.Errorf("ZilliqaSyncManager handleLockDepositEvents invokeNativeContract error for zil_tx %s: %s", util.EncodeHex(crosstx.txId), err)
 				}
 				continue
 			}
@@ -374,6 +380,9 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 
 	log.Infof("ZilliqaSyncManager commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
 	s.header4sync = make([][]byte, 0)
+
+	// todo
+	s.handleLockDepositEvents(s.currentHeight)
 	return 0
 }
 
@@ -394,7 +403,7 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 		blockHeader := core.NewTxBlockFromTxBlockT(txBlockT).BlockHeader
 		if bytes.Equal(util.Sha256(blockHeader.Serialize()), raw) {
 			bs, _ := json.Marshal(blockHeader)
-			log.Infof("rollBackToCommAncestor - find the common ancestor: %s(number: %d)", bs, s.currentHeight)
+			log.Infof("ZilliqaSyncManager rollBackToCommAncestor - find the common ancestor: %s(number: %d)", bs, s.currentHeight)
 			break
 		}
 	}
@@ -405,11 +414,18 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 		log.Warnf("rollBackToCommAncestor, fail to get tx block, err: %s\n", err)
 	}
 
-	dsNum, err2 := strconv.ParseUint(txBlock.Header.DSBlockNum, 64, 10)
+	dsNum, err2 := strconv.ParseUint(txBlock.Header.DSBlockNum, 10, 64)
 	if err2 != nil {
 		log.Warnf("rollBackToCommAncestor, fail to parse ds num, err: %s\n", err2)
 	}
 
+	a,_ := s.zilSdk.GetDsBlockVerbose(txBlock.Header.DSBlockNum)
+	b := core.NewDsBlockFromDsBlockT(a)
+	txBlockOrDsBlock := core.TxBlockOrDsBlock{
+		DsBlock: b,
+	}
+	rawBlock, _ := json.Marshal(txBlockOrDsBlock)
+	s.header4sync = append(s.header4sync,rawBlock)
 	s.currentDsBlockNum = dsNum
 
 }
