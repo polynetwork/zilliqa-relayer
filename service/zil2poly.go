@@ -191,7 +191,7 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
-	log.Infof("ZilliqaSyncManager handleLockDepositEvents - height is %s", height)
+	log.Infof("ZilliqaSyncManager handleLockDepositEvents - height is %d", height)
 	retryList, err := s.db.GetAllRetry()
 	if err != nil {
 		return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - this.db.GetAllRetry error: %s", err)

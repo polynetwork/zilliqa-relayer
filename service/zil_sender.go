@@ -64,9 +64,9 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 
 	// todo carefully test this
 	pe := polynetwork.DeserializeProof(util.EncodeHex(rawAuditPath), 0)
-	rawHeader := util.EncodeHex(headerData)
+	rawHeader := "0x" + util.EncodeHex(headerData)
 	hpe := polynetwork.DeserializeProof(headerProof, 0)
-	curRawHeader := util.EncodeHex(rawAnchor)
+	curRawHeader := "0x" + util.EncodeHex(rawAnchor)
 	signatures, _ := polynetwork.SplitSignature(util.EncodeHex(sigs))
 
 	// todo use chan to handle result

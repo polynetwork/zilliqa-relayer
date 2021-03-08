@@ -61,6 +61,17 @@ func NewBoltDB(filePath string) (*BoltDB, error) {
 		return nil, err
 	}
 
+	// poly check
+	if err = db.Update(func(btx *bolt.Tx) error {
+		_, err := btx.CreateBucketIfNotExists(BKTHeight)
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	return w, nil
 }
 

@@ -92,6 +92,7 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 	}
 	for _, event := range events {
 		for _, notify := range event.Notify {
+			log.Infof("PolySyncManager handleDepositEvents get notify address: %s\n", notify.ContractAddress)
 			if notify.ContractAddress == p.cfg.PolyConfig.EntranceContractAddress {
 				states := notify.States.([]interface{})
 				method, _ := states[0].(string)
