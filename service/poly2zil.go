@@ -57,6 +57,7 @@ func (p *PolySyncManager) MonitorChain() {
 }
 
 func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
+	log.Infof("PolySyncManager handleDepositEvents at height %d\n", height)
 	lastEpoch := p.findLatestHeight()
 	hdr, err := p.polySdk.GetHeaderByHeight(height + 1)
 	if err != nil {
@@ -233,12 +234,4 @@ func (p *PolySyncManager) findLatestHeight() uint32 {
 	}
 
 	return 0
-	// todo
-	//log.Info(epochStartHeightRep.Result.CurEpochStartHeight)
-	//height, err2 := strconv.ParseUint(epochStartHeightRep.Result.CurEpochStartHeight, 10, 32)
-	//if err2 != nil {
-	//	log.Errorf("PolySyncManager FindLatestHeight -  faild to parse epoch start height: %s\n", err2.Error())
-	//	return 0
-	//}
-	//return uint32(height)
 }

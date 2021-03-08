@@ -49,7 +49,7 @@ zil_config:
   zil_monitor_interval: 40
   corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
   side_chain_id: 1
-  key_store_path: ./keystore
+  key_store_path: ./admin.keystore
   key_store_pwd_set:
     7d48043742a1103042d327111746531ca26be9be: "pwd1"
     de0a0fbe9042aa165fb21e7b5e648162bcf1e8e7: "pwd2"

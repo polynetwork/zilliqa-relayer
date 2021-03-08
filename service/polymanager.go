@@ -69,11 +69,11 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		}
 		pwd := keystorepwdset[ks.Address]
 		if pwd == nil {
-			return nil, errors.New("NewPolySyncManager - there is no password for keystore: " + ks.Address)
+			return nil, errors.New("NewPolySyncManager - there is no password for admin.keystore: " + ks.Address)
 		}
 		privateKey, err2 := descryptor.DecryptPrivateKey(keystore, pwd.(string))
 		if err2 != nil {
-			return nil, errors.New("NewPolySyncManager - descrypt keystore error: " + err2.Error())
+			return nil, errors.New("NewPolySyncManager - descrypt admin.keystore error: " + err2.Error())
 		}
 
 		// init cross chain smart contract proxy

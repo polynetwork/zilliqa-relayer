@@ -35,6 +35,9 @@ func init() {
 	//}
 
 	RootCmd.AddCommand(runCmd)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
 }
 
 func initConfig() {
@@ -156,7 +159,7 @@ var runCmd = &cobra.Command{
 		}
 
 		zilliqaManager.Run(true)
-		polyManager.Run(false)
+		polyManager.Run(true)
 
 		service.WaitToExit()
 
