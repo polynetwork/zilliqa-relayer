@@ -116,8 +116,8 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 				}
 				var isTarget bool
 				if len(p.cfg.TargetContracts) > 0 {
-					// todo assuming ToContractAddress is not bech32
-					// handle error
+					// target address configuration should include those contracts are allowed to be triggered by
+					// cross chain transactions. e.g LockProxy
 					toContractStr, _ := bech32.ToBech32Address(util.EncodeHex(param.MakeTxParam.ToContractAddress))
 					for _, v := range p.cfg.TargetContracts {
 						toChainIdArr, ok := v[toContractStr]

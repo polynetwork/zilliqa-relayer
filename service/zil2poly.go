@@ -215,6 +215,10 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		}
 		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof,height)
 
+		if proof == nil {
+			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", "proof is nil")
+		}
+
 		zilProof := &ZILProof{
 			AccountProof: proof.AccountProof,
 		}
