@@ -42,7 +42,7 @@ Before running, you need feed the configuration file `config.yaml`.
 
 ```yaml
 zil_config:
-  zil_api: https://api.ziliqa.com
+  zil_api: https://api.zilliqa.com
   zil_chain_id: 111
   zil_message_version: 1
   zil_force_height: 0
@@ -51,11 +51,11 @@ zil_config:
   corss_chain_manager_address: zil1tjru7m5zdn3x6k0t72nzmmpz62e5qds62nte9t
   cross_chain_manager_proxy_address: zil1n7wkwr0xxslwsrhnqtjrwlus80dp5ncnlpaw93
   side_chain_id: 85
-  key_store_path: admin.keystore
+  key_store_path: zilliqa.wallet
   key_store_pwd_set:
     6c89b62d65dc632e259b96f7ae2f1d68a27e3383: ""
 poly_config:
-  poly_wallet_file: wallet.dat
+  poly_wallet_file: poly.wallet
   poly_wallet_pwd:
   poly_start_height: 0
   poly_monitor_interval: 2
