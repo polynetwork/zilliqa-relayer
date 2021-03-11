@@ -35,6 +35,7 @@ func (p *PolySyncManager) MonitorChain() {
 			}
 			latestHeight--
 			if latestHeight-p.currentHeight < config.OntUsefulBlockNum {
+				log.Infof("PolySyncManager MonitorChain - poly chain skip current height: %d", latestHeight)
 				continue
 			}
 			log.Infof("PolySyncManager MonitorChain - poly chain current height: %d", latestHeight)

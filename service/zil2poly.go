@@ -206,14 +206,14 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		}
 		heightString := new(string)
 		*heightString = strconv.FormatUint(height, 10)
-		ccmc,_ :=  bech32.FromBech32Addr(s.cfg.ZilConfig.CrossChainManagerContract)
-		txIndexBigInt,_ := new(big.Int).SetString(crosstx.txIndex,16)
+		ccmc, _ := bech32.FromBech32Addr(s.cfg.ZilConfig.CrossChainManagerContract)
+		txIndexBigInt, _ := new(big.Int).SetString(crosstx.txIndex, 16)
 		txIndexDecimal := txIndexBigInt.String()
 		proof, err := s.zilSdk.GetStateProof(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal}, heightString)
 		if err != nil {
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", err)
 		}
-		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof,height)
+		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof, height)
 
 		if proof == nil {
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", "proof is nil")
@@ -423,13 +423,13 @@ func (s *ZilliqaSyncManager) rollBackToCommAncestor() {
 		log.Warnf("rollBackToCommAncestor, fail to parse ds num, err: %s\n", err2)
 	}
 
-	a,_ := s.zilSdk.GetDsBlockVerbose(txBlock.Header.DSBlockNum)
+	a, _ := s.zilSdk.GetDsBlockVerbose(txBlock.Header.DSBlockNum)
 	b := core.NewDsBlockFromDsBlockT(a)
 	txBlockOrDsBlock := core.TxBlockOrDsBlock{
 		DsBlock: b,
 	}
 	rawBlock, _ := json.Marshal(txBlockOrDsBlock)
-	s.header4sync = append(s.header4sync,rawBlock)
+	s.header4sync = append(s.header4sync, rawBlock)
 	s.currentDsBlockNum = dsNum
 
 }

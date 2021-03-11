@@ -29,19 +29,19 @@ type PolySyncManager struct {
 
 func (p *PolySyncManager) init() bool {
 	if p.currentHeight > 0 {
-		log.Infof("PolySyncManager init - start height from flag: %d\n", p.currentHeight)
+		log.Infof("PolySyncManager init - start height from flag: %d", p.currentHeight)
 		return true
 	}
 
 	p.currentHeight = p.db.GetPolyHeight()
+	log.Infof("PolySyncManager init - get poly height from local storage: %d", p.currentHeight)
 	latestHeight := p.findLatestHeight()
+	log.Infof("PolySyncManager init - get poly height from cross chain manager contract: %d", latestHeight)
 	if latestHeight > p.currentHeight {
 		p.currentHeight = latestHeight
-		log.Infof("PolyManager init - latest height from cross chain manager: %d\n", p.currentHeight)
 		return true
 	}
-
-	log.Infof("PolyManager init - latest height from DB: %d\n", p.currentHeight)
+	log.Infof("PolySyncManager init - start height from flag: %d", p.currentHeight)
 	return true
 }
 
