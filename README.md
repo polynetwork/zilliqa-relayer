@@ -42,7 +42,7 @@ Before running, you need feed the configuration file `config.yaml`.
 
 ```yaml
 zil_config:
-  zil_api: https://api.ziiliqa.com
+  zil_api: https://api.ziliqa.com
   zil_chain_id: 111
   zil_message_version: 1
   zil_force_height: 0
