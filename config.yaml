@@ -1,21 +1,21 @@
 zil_config:
-  zil_api: https://dev-api.zilliqa.com/
-  zil_chain_id: 333
+  zil_api: https://api.ziiliqa.com
+  zil_chain_id: 111
   zil_message_version: 1
-  zil_start_height: 0
-  zil_monitor_interval: 40
-  corss_chain_manager_address: zil16vxy2u59sct5nupryxm3wfgteuhve9p0hp605f
-  cross_chain_manager_proxy_address: zil1urrkyfpww7rzhxh36m9nhksr5z73ragpar53nk
-  side_chain_id: 2
+  zil_force_height: 0
+  zil_monitor_interval: 10
+  zil_headers_per_batch: 2
+  corss_chain_manager_address: zil1tjru7m5zdn3x6k0t72nzmmpz62e5qds62nte9t
+  cross_chain_manager_proxy_address: zil1n7wkwr0xxslwsrhnqtjrwlus80dp5ncnlpaw93
+  side_chain_id: 85
   key_store_path: admin.keystore
   key_store_pwd_set:
-    7d48043742a1103042d327111746531ca26be9be: "xiaohuo"
-    de0a0fbe9042aa165fb21e7b5e648162bcf1e8e7: "xiaohuo"
+    6c89b62d65dc632e259b96f7ae2f1d68a27e3383: ""
 poly_config:
   poly_wallet_file: wallet.dat
-  poly_wallet_pwd: dummy
-  poly_start_height: 1
-  poly_monitor_interval: 40
+  poly_wallet_pwd:
+  poly_start_height: 0
+  poly_monitor_interval: 2
   entrance_contract_address: "0300000000000000000000000000000000000000"
-  rest_url: http://localhost:20336
-  target_contracts: target_contracts.json
+  rest_url: http://poly.com
+target_contracts: target_contracts.json
