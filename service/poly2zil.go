@@ -161,8 +161,26 @@ func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
 }
 
 func (p *PolySyncManager) selectSender() *ZilSender {
-	// todo considering now we only have one admin which can control the contract
-	return p.senders[0]
+S:
+	for _, sender := range p.senders {
+		s := p.isFreeSender(sender)
+		if s != nil {
+			return sender
+		}
+	}
+	log.Warn("Current no zilliqa sender can use, sleep 10 seconds and reselect")
+	time.Sleep(time.Second * 10)
+	goto S
+}
+
+func (p *PolySyncManager) isFreeSender(sender *ZilSender) *ZilSender {
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+	if !sender.inUse {
+		sender.inUse = true
+		return sender
+	}
+	return nil
 }
 
 type EpochStartHeight struct {

@@ -15,16 +15,20 @@ import (
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
+	"sync"
 )
 
 type ZilSender struct {
-	cfg        *config.Config
-	zilSdk     *provider.Provider
-	address    string //non-bech32 address
+	cfg    *config.Config
+	zilSdk *provider.Provider
+	//non-bech32 address
+	address    string
 	privateKey string
 
 	polySdk         *poly_go_sdk.PolySdk
 	crossChainProxy *polynetwork.Proxy
+	inUse           bool
+	mu              sync.Mutex
 }
 
 func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
@@ -49,7 +53,6 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 		}
 	}
 
-	// todo ensure that TxHash is bytes of hash, not utf8 bytes
 	exist := sender.checkIfFromChainTxExist(param.FromChainID, util.EncodeHex(param.TxHash))
 	if exist {
 		log.Infof("ZilSender commitDepositEventsWithHeader - already relayed to zil: (from_chain_id: %d, from_txhash: %x, param.TxHash: %x\n)", param.FromChainID, param.TxHash, param.MakeTxParam.TxHash)
@@ -62,7 +65,6 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 	}
 	headerData = header.GetMessage()
 
-	// todo carefully test this
 	pe := polynetwork.DeserializeProof(util.EncodeHex(rawAuditPath), 0)
 	rawHeader := "0x" + util.EncodeHex(headerData)
 	hpe := polynetwork.DeserializeProof(headerProof, 0)
@@ -77,6 +79,9 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 	}
 
 	log.Infof("ZilSender commitDepositEventsWithHeader -  confirmed transaction: %s\n", transaction.ID)
+	sender.mu.Lock()
+	sender.inUse = false
+	sender.mu.Unlock()
 	return true
 
 }
@@ -124,6 +129,9 @@ func (sender *ZilSender) commitHeader(hdr *polytypes.Header) bool {
 	}
 
 	log.Infof("ZilSender commitHeader -  confirmed transaction: %s\n", transaction.ID)
+	sender.mu.Lock()
+	sender.inUse = false
+	sender.mu.Unlock()
 	return true
 
 }
