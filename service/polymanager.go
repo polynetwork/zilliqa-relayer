@@ -95,6 +95,7 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 			privateKey:      privateKey,
 			polySdk:         polySdk,
 			crossChainProxy: proxy,
+			inUse:           false,
 		}
 
 		senders = append(senders, sender)
