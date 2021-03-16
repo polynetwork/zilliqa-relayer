@@ -79,6 +79,7 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		// init cross chain smart contract proxy
 		wallet := account.NewWallet()
 		wallet.AddByPrivateKey(privateKey)
+		log.Infof("NewPolySyncManager get zilliqa wallet: %s", wallet.DefaultAccount.Address)
 		proxy := &polynetwork.Proxy{
 			ProxyAddr:  crossChainManagerProxy,
 			ImplAddr:   crossChainManager,
