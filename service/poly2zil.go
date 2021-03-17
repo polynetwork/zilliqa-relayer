@@ -41,15 +41,16 @@ func (p *PolySyncManager) MonitorChain() {
 			log.Infof("PolySyncManager MonitorChain - poly chain current height: %d", latestHeight)
 			blockHandleResult = true
 			for p.currentHeight <= latestHeight-config.OntUsefulBlockNum {
-				blockHandleResult = p.handleDepositEvents(p.currentHeight)
+				blockHandleResult = p.handleDepositEvents(p.currentHeight,latestHeight)
 				if blockHandleResult == false {
 					break
 				}
 				p.currentHeight++
+				if err = p.db.UpdatePolyHeight(p.currentHeight - 1); err != nil {
+					log.Errorf("PolySyncManager MonitorChain - failed to save height of poly: %v", err)
+				}
 			}
-			if err = p.db.UpdatePolyHeight(p.currentHeight - 1); err != nil {
-				log.Errorf("PolySyncManager MonitorChain - failed to save height of poly: %v", err)
-			}
+
 		case <-p.exitChan:
 			return
 
@@ -57,8 +58,8 @@ func (p *PolySyncManager) MonitorChain() {
 	}
 }
 
-func (p *PolySyncManager) handleDepositEvents(height uint32) bool {
-	log.Infof("PolySyncManager handleDepositEvents at height %d\n", height)
+func (p *PolySyncManager) handleDepositEvents(height,latest uint32) bool {
+	log.Infof("PolySyncManager handleDepositEvents at height %d, latest height %d\n", height,latest)
 	lastEpoch := p.findLatestHeight()
 	hdr, err := p.polySdk.GetHeaderByHeight(height + 1)
 	if err != nil {
