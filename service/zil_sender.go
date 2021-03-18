@@ -32,8 +32,6 @@ type ZilSender struct {
 }
 
 func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
-	sender.mu.Lock()
-	defer sender.mu.Unlock()
 	// verifyHeaderAndExecuteTx
 	var (
 		sigs       []byte
@@ -86,8 +84,7 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 }
 
 func (sender *ZilSender) commitHeader(hdr *polytypes.Header) bool {
-	sender.mu.Lock()
-	defer sender.mu.Unlock()
+	log.Infof("ZilSender commitHeader - height: %d\n", hdr.Height)
 	headerdata := hdr.GetMessage()
 	var (
 		bookkeepers []keypair.PublicKey

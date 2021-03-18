@@ -148,14 +148,19 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
 					sender.address, event.TxHash, height)
 				// temporarily ignore the error for tx
+				sender.mu.Lock()
 				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
+				sender.mu.Unlock()
 			}
 		}
 	}
 
 	if cnt == 0 && isEpoch && isCurr {
 		sender := p.selectSender()
-		return sender.commitHeader(hdr)
+		sender.mu.Lock()
+		res := sender.commitHeader(hdr)
+		sender.mu.Unlock()
+		return res
 	}
 
 	return true
@@ -163,10 +168,13 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 
 func (p *PolySyncManager) selectSender() *ZilSender {
 S:
+	log.Info("start select sender")
 	for _, sender := range p.senders {
 		sender.mu.Lock()
 		if !sender.inUse {
 			sender.inUse = true
+			sender.mu.Unlock()
+			log.Infof("sender %s selected",sender.address)
 			return sender
 		}
 		sender.mu.Unlock()
