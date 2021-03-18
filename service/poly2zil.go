@@ -41,7 +41,7 @@ func (p *PolySyncManager) MonitorChain() {
 			log.Infof("PolySyncManager MonitorChain - poly chain current height: %d", latestHeight)
 			blockHandleResult = true
 			for p.currentHeight <= latestHeight-config.OntUsefulBlockNum {
-				blockHandleResult = p.handleDepositEvents(p.currentHeight,latestHeight)
+				blockHandleResult = p.handleDepositEvents(p.currentHeight, latestHeight)
 				if blockHandleResult == false {
 					break
 				}
@@ -58,8 +58,8 @@ func (p *PolySyncManager) MonitorChain() {
 	}
 }
 
-func (p *PolySyncManager) handleDepositEvents(height,latest uint32) bool {
-	log.Infof("PolySyncManager handleDepositEvents at height %d, latest height %d\n", height,latest)
+func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
+	log.Infof("PolySyncManager handleDepositEvents at height %d, latest height %d\n", height, latest)
 	lastEpoch := p.findLatestHeight()
 	hdr, err := p.polySdk.GetHeaderByHeight(height + 1)
 	if err != nil {
@@ -164,24 +164,16 @@ func (p *PolySyncManager) handleDepositEvents(height,latest uint32) bool {
 func (p *PolySyncManager) selectSender() *ZilSender {
 S:
 	for _, sender := range p.senders {
-		s := p.isFreeSender(sender)
-		if s != nil {
+		sender.mu.Lock()
+		if !sender.inUse {
+			sender.inUse = true
 			return sender
 		}
+		sender.mu.Unlock()
 	}
 	log.Warn("Current no zilliqa sender can use, sleep 10 seconds and reselect")
 	time.Sleep(time.Second * 10)
 	goto S
-}
-
-func (p *PolySyncManager) isFreeSender(sender *ZilSender) *ZilSender {
-	sender.mu.Lock()
-	defer sender.mu.Unlock()
-	if !sender.inUse {
-		sender.inUse = true
-		return sender
-	}
-	return nil
 }
 
 type EpochStartHeight struct {

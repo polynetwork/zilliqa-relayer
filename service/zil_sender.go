@@ -32,6 +32,8 @@ type ZilSender struct {
 }
 
 func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
 	// verifyHeaderAndExecuteTx
 	var (
 		sigs       []byte
@@ -71,22 +73,21 @@ func (sender *ZilSender) commitDepositEventsWithHeader(header *polytypes.Header,
 	curRawHeader := "0x" + util.EncodeHex(rawAnchor)
 	signatures, _ := polynetwork.SplitSignature(util.EncodeHex(sigs))
 
-	// todo use chan to handle result
 	transaction, err := sender.crossChainProxy.VerifyHeaderAndExecuteTx(pe, rawHeader, hpe, curRawHeader, signatures)
+	sender.inUse = false
 	if err != nil {
 		log.Errorf("ZilSender commitDepositEventsWithHeader - failed to call VerifyHeaderAndExecuteTx: %s\n", err.Error())
 		return false
 	}
 
 	log.Infof("ZilSender commitDepositEventsWithHeader -  confirmed transaction: %s\n", transaction.ID)
-	sender.mu.Lock()
-	sender.inUse = false
-	sender.mu.Unlock()
 	return true
 
 }
 
 func (sender *ZilSender) commitHeader(hdr *polytypes.Header) bool {
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
 	headerdata := hdr.GetMessage()
 	var (
 		bookkeepers []keypair.PublicKey
@@ -118,20 +119,18 @@ func (sender *ZilSender) commitHeader(hdr *polytypes.Header) bool {
 		publickeys = append(publickeys, tools.GetNoCompresskey(key)...)
 	}
 
-	// todo carefully test this, add more useful logs
-	rawHeader := util.EncodeHex(headerdata)
+	rawHeader := "0x" + util.EncodeHex(headerdata)
 	PubKeys, _ := polynetwork.SplitPubKeys(util.EncodeHex(publickeys))
 	signatures, _ := polynetwork.SplitSignature(util.EncodeHex(sigs))
 	transaction, err := sender.crossChainProxy.ChangeBookKeeper(rawHeader, PubKeys, signatures)
+	sender.inUse = false
 	if err != nil {
 		log.Errorf("ZilSender commitHeader - failed to call VerifyHeaderAndExecuteTx: %s\n", err.Error())
 		return false
 	}
 
 	log.Infof("ZilSender commitHeader -  confirmed transaction: %s\n", transaction.ID)
-	sender.mu.Lock()
-	sender.inUse = false
-	sender.mu.Unlock()
+
 	return true
 
 }
