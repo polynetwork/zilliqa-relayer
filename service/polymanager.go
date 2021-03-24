@@ -25,6 +25,7 @@ type PolySyncManager struct {
 	crossChainManager      string
 	crossChainManagerProxy string
 	senders                []*ZilSender
+	nonceManager           *NonceManager
 }
 
 func (p *PolySyncManager) init() bool {
@@ -48,6 +49,7 @@ func (p *PolySyncManager) init() bool {
 func (p *PolySyncManager) Run(enable bool) {
 	if enable {
 		go p.MonitorChain()
+		go p.nonceManager.Run()
 	}
 }
 
@@ -60,6 +62,8 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 	descryptor := crypto.NewDefaultKeystore()
 
 	var senders []*ZilSender
+	var privateKeys []string
+	zilSenderMap := make(map[string]*NonceAndSender, 0)
 
 	for _, keystore := range keystores {
 		var ks crypto.KeystoreV3
@@ -100,6 +104,31 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		}
 
 		senders = append(senders, sender)
+
+		balAndNonce, err3 := zilSdk.GetBalance(ks.Address)
+		if err3 != nil {
+			log.Infof("NewPolySyncManager get address %s nonce error %s", ks.Address, err3.Error())
+			continue
+		}
+
+		privateKeyAndNonce := &NonceAndSender{
+			Sender:     sender,
+			LocalNonce: balAndNonce.Nonce,
+		}
+
+		privateKeys = append(privateKeys, privateKey)
+		zilSenderMap[privateKey] = privateKeyAndNonce
+
+	}
+
+	nonceManager := &NonceManager{
+		UpdateInterval:        30,
+		ZilClient:             zilSdk,
+		SentTransactions:      make(map[string]map[string]TransactionWithAge),
+		ConfirmedTransactions: make(map[string][]string),
+		SenderPrivateKeys:     privateKeys,
+		ZilSenderMap:          zilSenderMap,
+		CurrentIndex:          0,
 	}
 
 	return &PolySyncManager{
@@ -112,5 +141,6 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		crossChainManager:      crossChainManager,
 		crossChainManagerProxy: crossChainManagerProxy,
 		senders:                senders,
+		nonceManager:           nonceManager,
 	}, nil
 }

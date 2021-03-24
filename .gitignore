@@ -4,3 +4,6 @@ bolt.bin
 config.local.yaml
 constants.xml
 cross_chain_manager_admin.json
+xiaohuo.wallet
+zilliqa.wallet
+poly.wallet

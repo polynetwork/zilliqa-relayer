@@ -144,24 +144,25 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 					}
 				}
 				cnt++
-				sender := p.selectSender()
-				log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
-					sender.address, event.TxHash, height)
-				// temporarily ignore the error for tx
-				sender.mu.Lock()
-				sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-				sender.mu.Unlock()
+				p.nonceManager.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
+				//sender := p.selectSender()
+				//log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
+				//	sender.address, event.TxHash, height)
+				//// temporarily ignore the error for tx
+				//sender.mu.Lock()
+				//sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
+				//sender.mu.Unlock()
 			}
 		}
 	}
 
-	if cnt == 0 && isEpoch && isCurr {
-		sender := p.selectSender()
-		sender.mu.Lock()
-		res := sender.commitHeader(hdr)
-		sender.mu.Unlock()
-		return res
-	}
+	//if cnt == 0 && isEpoch && isCurr {
+	//	sender := p.selectSender()
+	//	sender.mu.Lock()
+	//	res := sender.commitHeader(hdr)
+	//	sender.mu.Unlock()
+	//	return res
+	//}
 
 	return true
 }
@@ -174,7 +175,7 @@ S:
 		if !sender.inUse {
 			sender.inUse = true
 			sender.mu.Unlock()
-			log.Infof("sender %s selected",sender.address)
+			log.Infof("sender %s selected", sender.address)
 			return sender
 		}
 		sender.mu.Unlock()
