@@ -156,13 +156,14 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 		}
 	}
 
-	//if cnt == 0 && isEpoch && isCurr {
-	//	sender := p.selectSender()
-	//	sender.mu.Lock()
-	//	res := sender.commitHeader(hdr)
-	//	sender.mu.Unlock()
-	//	return res
-	//}
+	if cnt == 0 && isEpoch && isCurr {
+		return p.nonceManager.commitHeader(hdr)
+		//sender := p.selectSender()
+		//sender.mu.Lock()
+		//res := sender.commitHeader(hdr)
+		//sender.mu.Unlock()
+		//return res
+	}
 
 	return true
 }

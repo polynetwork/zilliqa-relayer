@@ -50,6 +50,7 @@ func (nm *NonceManager) Run() {
 	}
 }
 
+// only for test purpose
 func (nm *NonceManager) send(txn *transaction.Transaction) bool {
 	currentSenderPrivateKey := nm.SenderPrivateKeys[nm.CurrentIndex]
 	nm.CurrentIndex++
@@ -101,6 +102,43 @@ func (nm *NonceManager) send(txn *transaction.Transaction) bool {
 	nm.SentTransactions[currentSender.address] = outerMap
 	nm.LockSentTransaction.Unlock()
 
+	return true
+}
+
+func (nm *NonceManager) commitHeader(hdr *polytypes.Header) bool {
+	nm.LockSentTransaction.Lock()
+	currentSenderPrivateKey := nm.SenderPrivateKeys[nm.CurrentIndex]
+	nm.CurrentIndex++
+	if nm.CurrentIndex > len(nm.SenderPrivateKeys)-1 {
+		nm.CurrentIndex = 0
+	}
+	currentSender := nm.ZilSenderMap[currentSenderPrivateKey].Sender
+	log.Infof("NonceManager - commitHeader use sender %s", currentSender.address)
+	nonce := strconv.FormatUint(uint64(nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce+1), 10)
+	txn, err := currentSender.commitHeaderWithNonce(hdr, nonce)
+	if err != nil {
+		log.Warnf("NonceManager - commitHeader error %s", err.Error())
+		return false
+	}
+
+	hash, _ := txn.Hash()
+
+	// handle nonce
+	nm.ZilSenderMap[currentSenderPrivateKey] = &NonceAndSender{
+		Sender:     nm.ZilSenderMap[currentSenderPrivateKey].Sender,
+		LocalNonce: nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce + 1,
+	}
+
+	outerMap := nm.SentTransactions[currentSender.address]
+	if outerMap == nil {
+		outerMap = make(map[string]TransactionWithAge)
+	}
+	outerMap[util.EncodeHex(hash)] = TransactionWithAge{
+		Txn: txn,
+		Age: 0,
+	}
+	nm.SentTransactions[currentSender.address] = outerMap
+	nm.LockSentTransaction.Unlock()
 	return true
 }
 

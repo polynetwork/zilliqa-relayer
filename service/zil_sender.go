@@ -176,3 +176,41 @@ func (sender *ZilSender) commitHeader(hdr *polytypes.Header) bool {
 	return true
 
 }
+
+func (sender *ZilSender) commitHeaderWithNonce(hdr *polytypes.Header, nonce string) (*transaction.Transaction, error) {
+	log.Infof("ZilSender commitHeader - height: %d\n", hdr.Height)
+	headerdata := hdr.GetMessage()
+	var (
+		bookkeepers []keypair.PublicKey
+		sigs        []byte
+	)
+
+	for _, sig := range hdr.SigData {
+		temp := make([]byte, len(sig))
+		copy(temp, sig)
+		newsig, _ := signature.ConvertToEthCompatible(temp)
+		sigs = append(sigs, newsig...)
+	}
+
+	blkInfo := &vconfig.VbftBlockInfo{}
+	if err := json.Unmarshal(hdr.ConsensusPayload, blkInfo); err != nil {
+		return nil, err
+	}
+
+	for _, peer := range blkInfo.NewChainConfig.Peers {
+		keystr, _ := hex.DecodeString(peer.ID)
+		key, _ := keypair.DeserializePublicKey(keystr)
+		bookkeepers = append(bookkeepers, key)
+	}
+
+	bookkeepers = keypair.SortPublicKeys(bookkeepers)
+	publickeys := make([]byte, 0)
+	for _, key := range bookkeepers {
+		publickeys = append(publickeys, tools.GetNoCompresskey(key)...)
+	}
+
+	rawHeader := "0x" + util.EncodeHex(headerdata)
+	PubKeys, _ := polynetwork.SplitPubKeys(util.EncodeHex(publickeys))
+	signatures, _ := polynetwork.SplitSignature(util.EncodeHex(sigs))
+	return sender.crossChainProxy.ChangeBookKeeperWithNonce(rawHeader, PubKeys, signatures, nonce)
+}
