@@ -209,7 +209,9 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		ccmc, _ := bech32.FromBech32Addr(s.cfg.ZilConfig.CrossChainManagerContract)
 		txIndexBigInt, _ := new(big.Int).SetString(crosstx.txIndex, 16)
 		txIndexDecimal := txIndexBigInt.String()
-		proof, err := s.zilSdk.GetStateProof(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal}, heightString)
+		storageKey := core.GenerateStorageKey(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal})
+		hashedStorageKey := util.Sha256(storageKey)
+		proof, err := s.zilSdk.GetStateProof(ccmc, util.EncodeHex(hashedStorageKey), heightString)
 		if err != nil {
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", err)
 		}
@@ -223,8 +225,7 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 			AccountProof: proof.AccountProof,
 		}
 
-		skey := core.GenerateStorageKey("zilToPolyTxHashMap", []string{txIndexDecimal})
-		hexskey := util.EncodeHex(skey)
+		hexskey := util.EncodeHex(storageKey)
 		storageProof := StorageProof{
 			Key:   []byte(hexskey),
 			Value: crosstx.value,
