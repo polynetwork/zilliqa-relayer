@@ -54,6 +54,7 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
 					if res := s.commitHeader(); res != 0 {
+						log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d",res)
 						blockHandleResult = false
 						break
 					}
@@ -207,6 +208,7 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		heightString := new(string)
 		*heightString = strconv.FormatUint(height, 10)
 		ccmc, _ := bech32.FromBech32Addr(s.cfg.ZilConfig.CrossChainManagerContract)
+		ccmc = strings.ToLower(ccmc)
 		txIndexBigInt, _ := new(big.Int).SetString(crosstx.txIndex, 16)
 		txIndexDecimal := txIndexBigInt.String()
 		storageKey := core.GenerateStorageKey(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal})
@@ -376,8 +378,14 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	tick := time.NewTicker(100 * time.Millisecond)
 	var h uint32
 	for range tick.C {
-		h, _ = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
-		curr, _ := s.polySdk.GetCurrentBlockHeight()
+		h, err = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
+		if err != nil {
+			log.Warnf("ZilliqaSyncManager commitHeader get block height by hash, hash: %s error: %s",tx.ToHexString(),err.Error())
+		}
+		curr, err2 := s.polySdk.GetCurrentBlockHeight()
+		if err2 != nil {
+			log.Warnf("ZilliqaSyncManager commitHeader get current block height error: %s",err2.Error())
+		}
 		if h > 0 && curr > h {
 			break
 		}
