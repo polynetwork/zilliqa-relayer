@@ -9,6 +9,7 @@ zil_config:
   cross_chain_manager_proxy_address: zil1n7wkwr0xxslwsrhnqtjrwlus80dp5ncnlpaw93
   side_chain_id: 85
   key_store_path: zilliqa.wallet
+  max_exist_tx_epoch: 5
   key_store_pwd_set:
     6c89b62d65dc632e259b96f7ae2f1d68a27e3383: ""
 poly_config:

@@ -8,14 +8,13 @@ import (
 	"github.com/Zilliqa/gozilliqa-sdk/util"
 	polytypes "github.com/polynetwork/poly/core/types"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
+	"github.com/polynetwork/zilliqa-relayer/config"
 	log "github.com/sirupsen/logrus"
 	"math"
 	"strconv"
 	"sync"
 	"time"
 )
-
-const MaxExistTxEpoch = 200
 
 type NonceAndSender struct {
 	Sender     *ZilSender
@@ -40,6 +39,7 @@ type NonceManager struct {
 	ZilSenderMap      map[string]*NonceAndSender
 	SenderPrivateKeys []string
 	CurrentIndex      int
+	Cfg               *config.Config
 }
 
 func (nm *NonceManager) Run() {
@@ -218,22 +218,27 @@ func (nm *NonceManager) stat() {
 				// if start block is 0, try to give it a number first
 				if sentTransactionMap[hash].StartTxBlock == 0 {
 					log.Infof("NonceManager - stat try to determine start tx block for hash: %s", hash)
-					transactionStatus, err := nm.ZilClient.GetTransactionStatus(hash)
-					if err != nil {
-						log.Warnf("NonceManager - get transaction status error, hash is %s, err is %s", hash, err.Error())
-					} else {
-						age := 0
-						epoch, _ := strconv.ParseUint(transactionStatus.EpochInserted, 10, 64)
-						if currentTxEpoch > epoch {
-							age = int(currentTxEpoch - epoch)
-						}
-
-						sentTransactionMap[hash] = TransactionWithAge{
-							Txn:          txn.Txn,
-							StartTxBlock: epoch,
-							Age:          age,
-						}
+					sentTransactionMap[hash] = TransactionWithAge{
+						Txn:          txn.Txn,
+						StartTxBlock: currentTxEpoch,
+						Age:          0,
 					}
+					//transactionStatus, err := nm.ZilClient.GetTransactionStatus(hash)
+					//if err != nil {
+					//	log.Warnf("NonceManager - get transaction status error, hash is %s, err is %s", hash, err.Error())
+					//} else {
+					//	age := 0
+					//	epoch, _ := strconv.ParseUint(transactionStatus.EpochInserted, 10, 64)
+					//	if currentTxEpoch > epoch {
+					//		age = int(currentTxEpoch - epoch)
+					//	}
+					//
+					//	sentTransactionMap[hash] = TransactionWithAge{
+					//		Txn:          txn.Txn,
+					//		StartTxBlock: epoch,
+					//		Age:          age,
+					//	}
+					//}
 				} else {
 					log.Warnf("NonceManager - stat already has inserted epoch, update age, hash is %s", hash)
 					age := 0
@@ -264,7 +269,7 @@ func (nm *NonceManager) stat() {
 		log.Infof("NonceManager - stat start to detect dead transactions")
 		currentNonce := uint64(math.MaxUint64)
 		for hash, txn := range nm.SentTransactions[addr] {
-			if txn.Age > MaxExistTxEpoch {
+			if txn.Age > nm.Cfg.ZilConfig.MaxExistTxEpoch {
 				log.Warnf("NonceManager - stat found dead transaction, hash: %s, nonce is %s", hash, txn.Txn.Nonce)
 				log.Warnf("NonceManager - stat current nonce is: %d", currentNonce)
 				nonce, _ := strconv.ParseUint(txn.Txn.Nonce, 10, 64)
@@ -285,6 +290,11 @@ func (nm *NonceManager) stat() {
 					log.Infof("NonceManager - stat start to resend transaction %s, nonce %d", hash, nonce)
 					// todo handle error
 					nm.ZilClient.CreateTransaction(txn.Txn.ToTransactionPayload())
+					nm.SentTransactions[addr][hash] = TransactionWithAge{
+						Txn:          txn.Txn,
+						StartTxBlock: currentTxEpoch,
+						Age:          0,
+					}
 				}
 			}
 

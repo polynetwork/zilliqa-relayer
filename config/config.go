@@ -21,6 +21,7 @@ type ZILConfig struct {
 	SideChainId                    uint64
 	CrossChainManagerContract      string
 	CrossChainManagerProxyContract string
+	MaxExistTxEpoch                int
 	KeyStorePath                   string
 	KeyStorePwdSet                 map[string]interface{}
 }

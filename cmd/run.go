@@ -106,6 +106,7 @@ var runCmd = &cobra.Command{
 			SideChainId:                    uint64(zilConfigMap["side_chain_id"].(int)),
 			CrossChainManagerContract:      zilConfigMap["corss_chain_manager_address"].(string),
 			CrossChainManagerProxyContract: zilConfigMap["cross_chain_manager_proxy_address"].(string),
+			MaxExistTxEpoch:                zilConfigMap["max_exist_tx_epoch"].(int),
 			KeyStorePath:                   zilConfigMap["key_store_path"].(string),
 			KeyStorePwdSet:                 zilConfigMap["key_store_pwd_set"].(map[string]interface{}),
 		}

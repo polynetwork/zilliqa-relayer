@@ -54,7 +54,7 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
 					if res := s.commitHeader(); res != 0 {
-						log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d",res)
+						log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d", res)
 						blockHandleResult = false
 						break
 					}
@@ -213,15 +213,18 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 		txIndexDecimal := txIndexBigInt.String()
 		storageKey := core.GenerateStorageKey(ccmc, "zilToPolyTxHashMap", []string{txIndexDecimal})
 		hashedStorageKey := util.Sha256(storageKey)
+		log.Infof("ZilliqaSyncManager - handleLockDepositEvents start get proof on address %s, hashed key is: %s, height is %s", ccmc, util.EncodeHex(hashedStorageKey), *heightString)
 		proof, err := s.zilSdk.GetStateProof(ccmc, util.EncodeHex(hashedStorageKey), heightString)
 		if err != nil {
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", err)
 		}
-		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof, height)
 
 		if proof == nil {
+			log.Warnf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", "proof is nil")
 			return fmt.Errorf("ZilliqaSyncManager - handleLockDepositEvents - get proof from api error: %s", "proof is nil")
 		}
+
+		log.Infof("ZilliqaSyncManager - handleLockDepositEvents get proof from zilliqa api endpoint:  %+v, height is: %d\n", proof, height)
 
 		zilProof := &ZILProof{
 			AccountProof: proof.AccountProof,
@@ -380,11 +383,11 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	for range tick.C {
 		h, err = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
 		if err != nil {
-			log.Warnf("ZilliqaSyncManager commitHeader get block height by hash, hash: %s error: %s",tx.ToHexString(),err.Error())
+			log.Warnf("ZilliqaSyncManager commitHeader get block height by hash, hash: %s error: %s", tx.ToHexString(), err.Error())
 		}
 		curr, err2 := s.polySdk.GetCurrentBlockHeight()
 		if err2 != nil {
-			log.Warnf("ZilliqaSyncManager commitHeader get current block height error: %s",err2.Error())
+			log.Warnf("ZilliqaSyncManager commitHeader get current block height error: %s", err2.Error())
 		}
 		if h > 0 && curr > h {
 			break
@@ -394,7 +397,6 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	log.Infof("ZilliqaSyncManager commitHeader - send transaction %s to poly chain and confirmed on height %d", tx.ToHexString(), h)
 	s.header4sync = make([][]byte, 0)
 
-	// todo
 	s.handleLockDepositEvents(s.currentHeight)
 	return 0
 }

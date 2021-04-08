@@ -129,6 +129,7 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		SenderPrivateKeys:     privateKeys,
 		ZilSenderMap:          zilSenderMap,
 		CurrentIndex:          0,
+		Cfg:                   cfg,
 	}
 
 	return &PolySyncManager{
