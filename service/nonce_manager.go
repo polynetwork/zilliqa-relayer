@@ -32,7 +32,7 @@ type NonceManager struct {
 	ZilClient      *provider.Provider
 	// address => hash => transaction
 	SentTransactions    map[string]map[string]TransactionWithAge
-	LockSentTransaction sync.RWMutex
+	LockSentTransaction sync.Mutex
 	// address => list of transaction hash
 	ConfirmedTransactions map[string][]string
 	// private key => nonce and sender
@@ -48,61 +48,6 @@ func (nm *NonceManager) Run() {
 		time.Sleep(time.Second * time.Duration(nm.UpdateInterval))
 		nm.stat()
 	}
-}
-
-// only for test purpose
-func (nm *NonceManager) send(txn *transaction.Transaction) bool {
-	currentSenderPrivateKey := nm.SenderPrivateKeys[nm.CurrentIndex]
-	nm.CurrentIndex++
-	if nm.CurrentIndex > len(nm.SenderPrivateKeys)-1 {
-		nm.CurrentIndex = 0
-	}
-
-	currentSender := nm.ZilSenderMap[currentSenderPrivateKey].Sender
-	log.Infof("NonceManager - send use sender %s", currentSender.address)
-	nonce := strconv.FormatUint(uint64(nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce+1), 10)
-
-	txn.Nonce = nonce
-	txn.SenderPubKey = util.EncodeHex(keytools.GetPublicKeyFromPrivateKey(util.DecodeHex(currentSender.privateKey), true))
-	txn.Priority = true
-
-	wallet := account.NewWallet()
-	wallet.AddByPrivateKey(currentSender.privateKey)
-	_ = wallet.Sign(txn, *currentSender.zilSdk)
-	nm.LockSentTransaction.Lock()
-	resp, err := currentSender.zilSdk.CreateTransaction(txn.ToTransactionPayload())
-
-	if err != nil || resp.Error != nil {
-		if err != nil {
-			log.Warnf("NonceManager - send error %s", err.Error())
-			return false
-		}
-		log.Warnf("NonceManager - send error %s", resp.Error)
-		return false
-	}
-
-	log.Infof("NonceManager - transaction response is: %+v", resp)
-
-	hash, _ := txn.Hash()
-
-	// handle nonce
-	nm.ZilSenderMap[currentSenderPrivateKey] = &NonceAndSender{
-		Sender:     nm.ZilSenderMap[currentSenderPrivateKey].Sender,
-		LocalNonce: nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce + 1,
-	}
-
-	outerMap := nm.SentTransactions[currentSender.address]
-	if outerMap == nil {
-		outerMap = make(map[string]TransactionWithAge)
-	}
-	outerMap[util.EncodeHex(hash)] = TransactionWithAge{
-		Txn: txn,
-		Age: 0,
-	}
-	nm.SentTransactions[currentSender.address] = outerMap
-	nm.LockSentTransaction.Unlock()
-
-	return true
 }
 
 func (nm *NonceManager) commitHeader(hdr *polytypes.Header) bool {
@@ -197,15 +142,13 @@ func (nm *NonceManager) stat() {
 		}
 
 		// print some stat info about this address
-		nm.LockSentTransaction.RLock()
+		nm.LockSentTransaction.Lock()
 		log.Infof("NonceManager - address %s, local nonce = %d, remote nonce = %d", addr, nm.ZilSenderMap[key].LocalNonce, balAndNonce.Nonce)
 		log.Infof("NonceManager - sent transactions: %+v", nm.SentTransactions[addr])
 		log.Infof("NonceManager - confimred transactions: %+v", len(nm.ConfirmedTransactions[addr]))
-		nm.LockSentTransaction.RUnlock()
 
 		// check sent transactions
 		log.Infof("NonceManager - check sent transactions")
-		nm.LockSentTransaction.Lock()
 		var confirmedTxn []string
 
 		sentTransactionMap := nm.SentTransactions[addr]
