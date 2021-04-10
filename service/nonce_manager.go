@@ -32,7 +32,7 @@ type NonceManager struct {
 	ZilClient      *provider.Provider
 	// address => hash => transaction
 	SentTransactions    map[string]map[string]TransactionWithAge
-	LockSentTransaction sync.Mutex
+	LockSentTransaction sync.RWMutex
 	// address => list of transaction hash
 	ConfirmedTransactions map[string][]string
 	// private key => nonce and sender
@@ -197,9 +197,11 @@ func (nm *NonceManager) stat() {
 		}
 
 		// print some stat info about this address
+		nm.LockSentTransaction.RLock()
 		log.Infof("NonceManager - address %s, local nonce = %d, remote nonce = %d", addr, nm.ZilSenderMap[key].LocalNonce, balAndNonce.Nonce)
 		log.Infof("NonceManager - sent transactions: %+v", nm.SentTransactions[addr])
 		log.Infof("NonceManager - confimred transactions: %+v", len(nm.ConfirmedTransactions[addr]))
+		nm.LockSentTransaction.RUnlock()
 
 		// check sent transactions
 		log.Infof("NonceManager - check sent transactions")

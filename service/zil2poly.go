@@ -382,8 +382,13 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	var h uint32
 	for range tick.C {
 		h, err = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
+
 		if err != nil {
-			log.Warnf("ZilliqaSyncManager commitHeader get block height by hash, hash: %s error: %s", tx.ToHexString(), err.Error())
+			if strings.Contains(err.Error(), "JsonRpcResponse error code:42002 desc:INVALID PARAMS") {
+				log.Infof("ZilliqaSyncManager commitHeader - wait for confirmation")
+			} else {
+				log.Warnf("ZilliqaSyncManager commitHeader get block height by hash, hash: %s error: %s", tx.ToHexString(), err.Error())
+			}
 		}
 		curr, err2 := s.polySdk.GetCurrentBlockHeight()
 		if err2 != nil {
