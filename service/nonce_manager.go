@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/Zilliqa/gozilliqa-sdk/account"
 	"github.com/Zilliqa/gozilliqa-sdk/keytools"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	"github.com/Zilliqa/gozilliqa-sdk/transaction"
@@ -52,6 +51,7 @@ func (nm *NonceManager) Run() {
 
 func (nm *NonceManager) commitHeader(hdr *polytypes.Header) bool {
 	nm.LockSentTransaction.Lock()
+	defer nm.LockSentTransaction.Unlock()
 	currentSenderPrivateKey := nm.SenderPrivateKeys[nm.CurrentIndex]
 	nm.CurrentIndex++
 	if nm.CurrentIndex > len(nm.SenderPrivateKeys)-1 {
@@ -83,12 +83,12 @@ func (nm *NonceManager) commitHeader(hdr *polytypes.Header) bool {
 		Age: 0,
 	}
 	nm.SentTransactions[currentSender.address] = outerMap
-	nm.LockSentTransaction.Unlock()
 	return true
 }
 
 func (nm *NonceManager) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
 	nm.LockSentTransaction.Lock()
+	defer nm.LockSentTransaction.Unlock()
 	currentSenderPrivateKey := nm.SenderPrivateKeys[nm.CurrentIndex]
 	nm.CurrentIndex++
 	if nm.CurrentIndex > len(nm.SenderPrivateKeys)-1 {
@@ -121,7 +121,6 @@ func (nm *NonceManager) commitDepositEventsWithHeader(header *polytypes.Header, 
 		Age: 0,
 	}
 	nm.SentTransactions[currentSender.address] = outerMap
-	nm.LockSentTransaction.Unlock()
 	return true
 }
 
@@ -133,6 +132,8 @@ func (nm *NonceManager) stat() {
 	}
 	currentTxEpoch, _ := strconv.ParseUint(txBlock.Header.BlockNum, 10, 64)
 	log.Infof("NonceManager - current tx block number is: %s", txBlock.Header.BlockNum)
+	nm.LockSentTransaction.Lock()
+	defer nm.LockSentTransaction.Unlock()
 	for _, key := range nm.SenderPrivateKeys {
 		addr := keytools.GetAddressFromPrivateKey(util.DecodeHex(key))
 		balAndNonce, err := nm.ZilClient.GetBalance(addr)
@@ -142,7 +143,6 @@ func (nm *NonceManager) stat() {
 		}
 
 		// print some stat info about this address
-		nm.LockSentTransaction.Lock()
 		log.Infof("NonceManager - address %s, local nonce = %d, remote nonce = %d", addr, nm.ZilSenderMap[key].LocalNonce, balAndNonce.Nonce)
 		log.Infof("NonceManager - sent transactions: %+v", nm.SentTransactions[addr])
 		log.Infof("NonceManager - confimred transactions: %+v", len(nm.ConfirmedTransactions[addr]))
@@ -244,6 +244,5 @@ func (nm *NonceManager) stat() {
 			}
 
 		}
-		nm.LockSentTransaction.Unlock()
 	}
 }
