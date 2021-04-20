@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   zilliqa-relayer:
+    container_name: zilliqa-relayer
     build: .
     volumes:
       - ./persistence:/app/persistence
