@@ -4,5 +4,7 @@ services:
     build: .
     volumes:
       - ./persistence:/app/persistence
-      - ./secrets/config.yaml:/app/config.yaml
+      - ./secrets/config.local.yaml:/app/config.local.yaml
       - ./secrets/target_contracts.json:/app/target_contracts.json
+      - ./secrets/poly.wallet:/app/poly.wallet
+      - ./secrets/zilliqa.wallet:/app/zilliqa.wallet
