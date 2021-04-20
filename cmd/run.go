@@ -127,7 +127,7 @@ var runCmd = &cobra.Command{
 			ZilConfig:       zilConfig,
 			PolyConfig:      polyConfig,
 			TargetContracts: targetContract,
-			Path: db_path,
+			Path: dbPath,
 		}
 
 		cfgStr, _ := json.Marshal(cfg)
