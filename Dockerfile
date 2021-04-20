@@ -10,4 +10,4 @@ COPY config.yaml config.yaml
 COPY poly.wallet wallet.dat
 COPY run.sh run.sh
 COPY --from=build /app/zilliqa-relayer/zilliqa-relayer zilliqa-relayer
-CMD ["/bin/bash"]
+ENTRYPOINT ["/bin/bash", "run.sh"]
