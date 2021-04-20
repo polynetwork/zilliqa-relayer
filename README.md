@@ -78,7 +78,7 @@ If you are running via docker-compose, you'll need to install docker-compose fir
 https://docs.docker.com/compose/install/
 ```
 
-You need the following files and folders created:
+You need the following files and folders created: <br />
 If persistence is already created:
 ```
 ./persistence/bolt.bin
