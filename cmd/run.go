@@ -84,6 +84,7 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		zilConfigMap := viper.GetStringMap("zil_config")
 		targetContractsPath := viper.GetString("target_contracts")
+		dbPath := viper.GetString("db_path")
 		bytes, e := ioutil.ReadFile(targetContractsPath)
 		if e != nil {
 			log.Errorf("read target contracts error: %s, path: %s\n", e.Error(), targetContractsPath)
@@ -126,6 +127,7 @@ var runCmd = &cobra.Command{
 			ZilConfig:       zilConfig,
 			PolyConfig:      polyConfig,
 			TargetContracts: targetContract,
+			Path: db_path,
 		}
 
 		cfgStr, _ := json.Marshal(cfg)
