@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  zilliqa-relayer:
+    build: .
+    volumes:
+      - ./persistence:/app/persistence
+      - ./secrets/config.yaml:/app/config.yaml
+      - ./secrets/target_contracts.json:/app/target_contracts.json
