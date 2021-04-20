@@ -242,7 +242,7 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 
 		// commit proof
 		proofString, _ := json.Marshal(proof)
-		log.Debugf("ZilliqaSyncManager - handleLockDepositEvents commit proof, height: %d, proof: %s, value: %s, txhash: %s", height, proofString, util.EncodeHex(crosstx.value), util.EncodeHex(crosstx.txId))
+		log.Infof("ZilliqaSyncManager - handleLockDepositEvents commit proof, height: %d, proof: %s, value: %s, txhash: %s\n", height, proofString, util.EncodeHex(crosstx.value), util.EncodeHex(crosstx.txId))
 		tx, err := s.polySdk.Native.Ccm.ImportOuterTransfer(
 			s.cfg.ZilConfig.SideChainId,
 			crosstx.value,
@@ -268,7 +268,7 @@ func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
 				continue
 			}
 		} else {
-			log.Infof("ZilliqaSyncManager - handleLockDepositEvents commitProof - send transaction to poly chain: ( poly_txhash: %s, eth_txhash: %s, height: %d )",
+			log.Infof("ZilliqaSyncManager - handleLockDepositEvents commitProof - send transaction to poly chain: ( poly_txhash: %s, zil_txhash: %s, height: %d )",
 				tx.ToHexString(), util.EncodeHex(crosstx.txId), height)
 			txHash := tx.ToHexString()
 			err = s.db.PutCheck(txHash, v)
