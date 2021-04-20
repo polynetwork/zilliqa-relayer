@@ -148,24 +148,12 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 				}
 				cnt++
 				p.nonceManager.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-				//sender := p.selectSender()
-				//log.Infof("sender %s is handling poly tx ( hash: %s, height: %d )",
-				//	sender.address, event.TxHash, height)
-				//// temporarily ignore the error for tx
-				//sender.mu.Lock()
-				//sender.commitDepositEventsWithHeader(hdr, param, hp, anchor, event.TxHash, auditpath)
-				//sender.mu.Unlock()
 			}
 		}
 	}
 
 	if cnt == 0 && isEpoch && isCurr {
 		return p.nonceManager.commitHeader(hdr)
-		//sender := p.selectSender()
-		//sender.mu.Lock()
-		//res := sender.commitHeader(hdr)
-		//sender.mu.Unlock()
-		//return res
 	}
 
 	return true
