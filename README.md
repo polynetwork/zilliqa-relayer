@@ -23,7 +23,7 @@ After building the source code successfully,  you should see the executable prog
 ### Build Docker Image
 
 ```
-docker build -t polynetwork/zilliqa-relayer -f Dockerfile ./
+docker build -t polynetwork/zilliqa-relayer .
 ```
 
 This command will copy config.yaml to /app/config.yaml in the image. So you need to prepare config.yaml before running this command and you should start the zilliqa-relayer in container basing on the configuration in /app/config.yaml.
@@ -62,6 +62,7 @@ poly_config:
   entrance_contract_address: "0300000000000000000000000000000000000000"
   rest_url: http://poly.com
 target_contracts: target_contracts.json
+db_path: persistence
 ```
 
 A sample keystore file could be:
@@ -69,6 +70,53 @@ A sample keystore file could be:
 ```text
 {"address":"7d48043742a1103042d327111746531ca26be9be","id":"6cd445ed-8f5f-4565-af2a-cc2306a82b73","version":3,"crypto":{"cipher":"aes-128-ctr","ciphertext":"d136660a4e5664709031ebc162616556e8c812ab37d0157ea3276aa08d0a6c2d","kdf":"pbkdf2","mac":"b30dd459f1fd9d99c0b2f3452ccd2bf11414ad92d32ac70d1d7b52f17281b4e5","cipherparams":{"iv":"6a14f95c8cbafe7d1f317bec88e9d1b8"},"kdfparams":{"n":8192,"c":262144,"r":8,"p":1,"dklen":32,"salt":"c4939e7cead32935d1972a2cd06d249dd501181e6ad2d1872fa0eb397d7fea20"}}}
 ```
+# Relayer Container Administration
+## Running the Relayer Container 
+### Prerequisites:
+If you are running via docker-compose, you'll need to install docker-compose first via the following guide:
+```
+https://docs.docker.com/compose/install/
+```
+
+You need the following files and folders created: <br />
+If persistence is already created:
+```
+./persistence/bolt.bin
+```
+If persistence folder is not created:
+```
+create a folder named 'persistence'.
+```
+Configuration Files:
+```
+secrets/config.local.yaml
+secrets/target_contracts.json
+secrets/poly.wallet
+secrets/zilliqa.wallet
+```
+### Running Relayer via Docker Container
+```
+./docker-run
+```
+
+### Running Relayer via Docker Compose
+```
+docker-compose up -d
+```
+## Stopping the Relayer
+### Stopping Relayer via Docker Container
+```
+docker stop zilliqa-relayer && docker rm zilliqa-relayer
+```
+### Stopping Relayer via Docker Compose
+```
+docker-compose down
+```
+## Getting logs
+```
+docker logs -f zilliqa-relayer
+```
+
 
 ## Other Resources
 
@@ -76,6 +124,7 @@ A sample keystore file could be:
 - [zilliqa cross chain manager](https://github.com/Zilliqa/zilliqa-contracts/blob/main/contracts/ZilCrossChainManager.scilla)
 - [zilliqa lock proxy](https://github.com/Zilliqa/zilliqa-contracts/blob/main/contracts/LockProxy.scilla)
 - [polynetwork](https://github.com/polynetwork/poly)
+
 
 
 

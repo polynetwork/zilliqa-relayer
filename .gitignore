@@ -8,6 +8,7 @@ xiaohuo.wallet
 zilliqa.wallet
 poly.wallet
 relayer.wallet
+secrets
 config.devnet.yaml
 config.testnet.yaml
 target_contracts_devnet.json

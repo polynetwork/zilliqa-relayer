@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ $SOURCE_BRANCH == "main" ]; then
+    docker tag $IMAGE_NAME $DOCKER_REPO:experimental-$SOURCE_COMMIT
+    docker push $DOCKER_REPO:experimental-$SOURCE_COMMIT
+fi
