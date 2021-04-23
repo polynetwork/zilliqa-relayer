@@ -85,7 +85,7 @@ If persistence is already created:
 ```
 If persistence folder is not created:
 ```
-create a folder named 'persistence'.
+create a folder named 'persistence'. The container will use that folder to store the bolt.bin file.
 ```
 Configuration Files:
 ```
