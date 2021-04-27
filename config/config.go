@@ -8,6 +8,7 @@ type Config struct {
 	ZilConfig       *ZILConfig
 	PolyConfig      *POLYConfig
 	Path            string
+	RemoveDB        bool
 	TargetContracts []map[string]map[string][]uint64
 }
 

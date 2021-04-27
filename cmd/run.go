@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"os"
+	"path"
 )
 
 var cfgFile string
@@ -85,6 +86,7 @@ var runCmd = &cobra.Command{
 		zilConfigMap := viper.GetStringMap("zil_config")
 		targetContractsPath := viper.GetString("target_contracts")
 		dbPath := viper.GetString("db_path")
+		removeDb := viper.GetBool("remove_db")
 		bytes, e := ioutil.ReadFile(targetContractsPath)
 		if e != nil {
 			log.Errorf("read target contracts error: %s, path: %s\n", e.Error(), targetContractsPath)
@@ -127,7 +129,8 @@ var runCmd = &cobra.Command{
 			ZilConfig:       zilConfig,
 			PolyConfig:      polyConfig,
 			TargetContracts: targetContract,
-			Path: dbPath,
+			Path:            dbPath,
+			RemoveDB:        removeDb,
 		}
 
 		cfgStr, _ := json.Marshal(cfg)
@@ -139,6 +142,10 @@ var runCmd = &cobra.Command{
 		if err1 != nil {
 			log.Errorf("init poly sdk error: %s\n", err1.Error())
 			return
+		}
+
+		if cfg.RemoveDB {
+			os.Remove(path.Join(cfg.Path, "bolt.bin"))
 		}
 
 		if !checkIfExist(cfg.Path) {
