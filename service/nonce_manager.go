@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2021 Zilliqa
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package service
 
 import (
@@ -168,22 +185,6 @@ func (nm *NonceManager) stat() {
 						StartTxBlock: currentTxEpoch,
 						Age:          0,
 					}
-					//transactionStatus, err := nm.ZilClient.GetTransactionStatus(hash)
-					//if err != nil {
-					//	log.Warnf("NonceManager - get transaction status error, hash is %s, err is %s", hash, err.Error())
-					//} else {
-					//	age := 0
-					//	epoch, _ := strconv.ParseUint(transactionStatus.EpochInserted, 10, 64)
-					//	if currentTxEpoch > epoch {
-					//		age = int(currentTxEpoch - epoch)
-					//	}
-					//
-					//	sentTransactionMap[hash] = TransactionWithAge{
-					//		Txn:          txn.Txn,
-					//		StartTxBlock: epoch,
-					//		Age:          age,
-					//	}
-					//}
 				} else {
 					log.Warnf("NonceManager - stat already has inserted epoch, update age, hash is %s", hash)
 					age := 0

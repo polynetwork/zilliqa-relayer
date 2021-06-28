@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2021 Zilliqa
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package cmd
 
 import (
@@ -20,20 +37,6 @@ var cfgFile string
 func init() {
 	cobra.OnInitialize(initConfig)
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-
-	//runCmd.Flags().String("api", "https://api.zilliqa.com", "zilliqa api endpoint")
-	//if err := viper.BindPFlag("api", runCmd.Flags().Lookup("api")); err != nil {
-	//	log.Fatal("Unable to bind flag:", err)
-	//}
-	//runCmd.Flags().String("zil_start_height", "1", "the from block number will be syncing to poly network")
-	//if err := viper.BindPFlag("api", runCmd.Flags().Lookup("zil_start_height")); err != nil {
-	//	log.Fatal("Unable to bind flag:", err)
-	//}
-	//
-	//runCmd.Flags().String("zil_scan_interval", "2", "the interval scanning zilliqa block")
-	//if err := viper.BindPFlag("zil_scan_interval", runCmd.Flags().Lookup("zil_scan_interval")); err != nil {
-	//	log.Fatal("Unable to bind flag:", err)
-	//}
 
 	RootCmd.AddCommand(runCmd)
 	log.SetFormatter(&log.TextFormatter{
