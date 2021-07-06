@@ -112,6 +112,7 @@ func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	txBlock := core.NewTxBlockFromTxBlockT(txBlockT)
 
 	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
+		log.Infof("ZilliqaSyncManager - handleBlockHeader query ds block: %d\n", txBlock.BlockHeader.DSBlockNum)
 		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
 		if err != nil {
 			log.Errorf("ZilliqaSyncManager - handleBlockHeader get ds block error: %s", err)
