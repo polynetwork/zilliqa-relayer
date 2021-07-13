@@ -113,18 +113,24 @@ func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 
 	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
 		log.Infof("ZilliqaSyncManager - handleBlockHeader query ds block: %d\n", txBlock.BlockHeader.DSBlockNum)
+		T:
 		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
 		if err != nil {
 			log.Errorf("ZilliqaSyncManager - handleBlockHeader get ds block error: %s", err)
 			return false
 		}
-		txBlockOrDsBlock := core.TxBlockOrDsBlock{
-			DsBlock: core.NewDsBlockFromDsBlockT(dsBlock),
+		if dsBlock.Header.LeaderPubKey == "0x000000000000000000000000000000000000000000000000000000000000000000" {
+			time.Sleep(time.Second * 2)
+			goto T
+		} else {
+			txBlockOrDsBlock := core.TxBlockOrDsBlock{
+				DsBlock: core.NewDsBlockFromDsBlockT(dsBlock),
+			}
+			rawBlock, _ := json.Marshal(txBlockOrDsBlock)
+			log.Infof("ZilliqaSyncManager handle new block header: %s\n", rawBlock)
+			s.header4sync = append(s.header4sync, rawBlock)
+			s.currentDsBlockNum++
 		}
-		rawBlock, _ := json.Marshal(txBlockOrDsBlock)
-		log.Infof("ZilliqaSyncManager handle new block header: %s\n", rawBlock)
-		s.header4sync = append(s.header4sync, rawBlock)
-		s.currentDsBlockNum++
 	}
 
 	txBlockOrDsBlock := core.TxBlockOrDsBlock{
