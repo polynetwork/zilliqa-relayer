@@ -104,16 +104,20 @@ func (s *ZilliqaSyncManager) handleNewBlock(height uint64) bool {
 
 func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	log.Infof("ZilliqaSyncManager handle new block header height is: %d\n", height)
+	T:
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(height, 10))
 	if err != nil {
 		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
 		return false
 	}
 	txBlock := core.NewTxBlockFromTxBlockT(txBlockT)
-
+	if txBlock.BlockHeader.DSBlockNum == 18446744073709551615 {
+		log.Infof("ZilliqaSyncManager - handleBlockHeader query ds block: ds block not ready")
+		time.Sleep(time.Second * 2)
+		goto T
+	}
 	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
 		log.Infof("ZilliqaSyncManager - handleBlockHeader query ds block: %d\n", txBlock.BlockHeader.DSBlockNum)
-		time.Sleep(time.Second * 2)
 		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
 		if err != nil {
 			log.Errorf("ZilliqaSyncManager - handleBlockHeader get ds block error: %s", err)
