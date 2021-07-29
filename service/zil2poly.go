@@ -65,7 +65,9 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 
 			blockHandleResult = true
 			for s.currentHeight < blockNumber {
-				s.handleNewBlock(s.currentHeight + 1)
+				if !s.handleNewBlock(s.currentHeight + 1) {
+					break
+				}
 				s.currentHeight++
 
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
@@ -98,6 +100,7 @@ func (s *ZilliqaSyncManager) handleNewBlock(height uint64) bool {
 	ret = s.fetchLockDepositEvents(height)
 	if !ret {
 		log.Infof("ZilliqaSyncManager handleNewBlock - fetchLockDepositEvents on height :%d failed\n", height)
+		return false
 	}
 	return true
 }
