@@ -405,8 +405,14 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	}
 
 	tick := time.NewTicker(100 * time.Millisecond)
+	retries := 0
 	var h uint32
 	for range tick.C {
+		if retries > 100 {
+			return 1
+		} else {
+			retries++
+		}
 		h, err = s.polySdk.GetBlockHeightByTxHash(tx.ToHexString())
 
 		if err != nil {
