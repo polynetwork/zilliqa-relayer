@@ -140,3 +140,16 @@ func GetNoCompresskey(key keypair.PublicKey) []byte {
 	}
 	return buf.Bytes()
 }
+
+func AppendToFile(fileName string, context string) {
+	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(context); err != nil {
+		panic(err)
+	}
+}

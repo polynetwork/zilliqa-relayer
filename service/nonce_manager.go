@@ -18,6 +18,7 @@
 package service
 
 import (
+	"encoding/json"
 	"github.com/Zilliqa/gozilliqa-sdk/keytools"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	"github.com/Zilliqa/gozilliqa-sdk/transaction"
@@ -25,12 +26,15 @@ import (
 	polytypes "github.com/polynetwork/poly/core/types"
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 	"github.com/polynetwork/zilliqa-relayer/config"
+	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
 	"math"
 	"strconv"
 	"sync"
 	"time"
 )
+
+const AuditLogFile = "audit.log"
 
 type NonceAndSender struct {
 	Sender     *ZilSender
@@ -103,6 +107,12 @@ func (nm *NonceManager) commitHeader(hdr *polytypes.Header) bool {
 	return true
 }
 
+type TransactionAuditLog struct {
+	Time    time.Time
+	PayLoad string
+	Error   string
+}
+
 func (nm *NonceManager) commitDepositEventsWithHeader(header *polytypes.Header, param *common2.ToMerkleValue, headerProof string, anchorHeader *polytypes.Header, polyTxHash string, rawAuditPath []byte) bool {
 	nm.LockSentTransaction.Lock()
 	defer nm.LockSentTransaction.Unlock()
@@ -116,8 +126,17 @@ func (nm *NonceManager) commitDepositEventsWithHeader(header *polytypes.Header, 
 	log.Infof("NonceManager - commitDepositEventsWithHeader use sender %s", currentSender.address)
 	nonce := strconv.FormatUint(uint64(nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce+1), 10)
 	txn, err := currentSender.commitDepositEventsWithHeaderWithNonce(header, param, headerProof, anchorHeader, polyTxHash, rawAuditPath, nonce)
+	transactionRaw, _ := json.Marshal(txn)
+	auditLog := TransactionAuditLog{
+		Time:    time.Now(),
+		PayLoad: string(transactionRaw),
+		Error:   err.Error(),
+	}
+	auditLogRaw, _ := json.Marshal(auditLog)
+	tools.AppendToFile(AuditLogFile, string(auditLogRaw))
+
 	if err != nil {
-		log.Warnf("NonceManager - commitDepositEventsWithHeaderWithNonce error %s", err.Error())
+		log.Warnf("NonceManager - commitDepositEventsWithHeaderWithNonc e error %s", err.Error())
 		return false
 	}
 

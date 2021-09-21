@@ -41,6 +41,7 @@ import (
  * 2. filter deposit event, put into local database
  * 3. from database, handle deposit event, get proof and commit to poly
  */
+
 func (s *ZilliqaSyncManager) MonitorChain() {
 	log.Infof("ZilliqaSyncManager MonitorChain - start scan block at height: %d\n", s.currentHeight)
 	fetchBlockTicker := time.NewTicker(time.Duration(s.cfg.ZilConfig.ZilMonitorInterval) * time.Second)
@@ -107,7 +108,7 @@ func (s *ZilliqaSyncManager) handleNewBlock(height uint64) bool {
 
 func (s *ZilliqaSyncManager) handleBlockHeader(height uint64) bool {
 	log.Infof("ZilliqaSyncManager handle new block header height is: %d\n", height)
-	T:
+T:
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(height, 10))
 	if err != nil {
 		log.Errorf("ZilliqaSyncManager - handleBlockHeader error: %s", err)
