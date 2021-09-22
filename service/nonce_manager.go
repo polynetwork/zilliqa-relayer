@@ -126,12 +126,20 @@ func (nm *NonceManager) commitDepositEventsWithHeader(header *polytypes.Header, 
 	log.Infof("NonceManager - commitDepositEventsWithHeader use sender %s", currentSender.address)
 	nonce := strconv.FormatUint(uint64(nm.ZilSenderMap[currentSenderPrivateKey].LocalNonce+1), 10)
 	txn, err := currentSender.commitDepositEventsWithHeaderWithNonce(header, param, headerProof, anchorHeader, polyTxHash, rawAuditPath, nonce)
-	transactionRaw, _ := json.Marshal(txn)
-	auditLog := TransactionAuditLog{
-		Time:    time.Now(),
-		PayLoad: string(transactionRaw),
-		Error:   err.Error(),
+	var auditLog TransactionAuditLog
+	if err != nil {
+		auditLog = TransactionAuditLog{
+			Time:  time.Now(),
+			Error: err.Error(),
+		}
+	} else {
+		transactionRaw, _ := json.Marshal(txn)
+		auditLog = TransactionAuditLog{
+			Time:    time.Now(),
+			PayLoad: string(transactionRaw),
+		}
 	}
+
 	auditLogRaw, _ := json.Marshal(auditLog)
 	tools.AppendToFile(AuditLogFile, string(auditLogRaw))
 
