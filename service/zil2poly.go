@@ -409,7 +409,7 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 	retries := 0
 	var h uint32
 	for range tick.C {
-		if retries > 100 {
+		if retries > 5000 {
 			return 1
 		} else {
 			retries++
@@ -428,6 +428,7 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 			log.Warnf("ZilliqaSyncManager commitHeader get current block height error: %s", err2.Error())
 		}
 		if h > 0 && curr > h {
+			log.Infof("ZilliqaSyncManager commitHeader h > 0 or curr > h")
 			break
 		}
 	}
