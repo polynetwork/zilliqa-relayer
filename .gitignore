@@ -11,4 +11,10 @@ relayer.wallet
 secrets
 config.devnet.yaml
 config.testnet.yaml
+config.production.yaml
+target_contracts_local.json
 target_contracts_devnet.json
+target_contracts_production.json
+audit.log
+zil_relayer
+wallet.dat

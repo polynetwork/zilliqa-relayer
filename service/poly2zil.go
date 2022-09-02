@@ -106,6 +106,7 @@ func (p *PolySyncManager) handleDepositEvents(height, latest uint32) bool {
 		proof, _ := p.polySdk.GetMerkleProof(height+1, height+2)
 		hp = proof.AuditPath
 	}
+
 	cnt := 0
 	events, err := p.polySdk.GetSmartContractEventByBlock(height)
 	for err != nil {
@@ -264,5 +265,10 @@ func (p *PolySyncManager) findLatestHeight() uint32 {
 		return 0
 	}
 
-	return 0
+	height, err2 := strconv.ParseUint(epochStartHeightRep.Result.CurEpochStartHeight, 10, 32)
+	if err2 != nil {
+		log.Errorf("PolySyncManager FindLatestHeight -  failed to parse epoch start height: %s\n", err2.Error())
+		return 0
+	}
+	return uint32(height)
 }
