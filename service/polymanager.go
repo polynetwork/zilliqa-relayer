@@ -29,6 +29,7 @@ import (
 	"github.com/polynetwork/zilliqa-relayer/config"
 	"github.com/polynetwork/zilliqa-relayer/db"
 	"github.com/polynetwork/zilliqa-relayer/tools"
+	"strings"
 )
 
 type PolySyncManager struct {
@@ -88,7 +89,7 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 		if err1 != nil {
 			return nil, err1
 		}
-		pwd := keystorepwdset[ks.Address]
+		pwd := keystorepwdset[strings.ToLower(ks.Address)]
 		if pwd == nil {
 			return nil, errors.New("NewPolySyncManager - there is no password for zilliqa.wallet: " + ks.Address)
 		}
@@ -110,10 +111,11 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 			MsgVersion: cfg.ZilConfig.ZilMessageVersion,
 		}
 
+		addr := strings.Replace(ks.Address, "0x", "", 1)
 		sender := &ZilSender{
 			cfg:             cfg,
 			zilSdk:          zilSdk,
-			address:         ks.Address,
+			address:         addr,
 			privateKey:      privateKey,
 			polySdk:         polySdk,
 			crossChainProxy: proxy,
@@ -122,9 +124,9 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 
 		senders = append(senders, sender)
 
-		balAndNonce, err3 := zilSdk.GetBalance(ks.Address)
+		balAndNonce, err3 := zilSdk.GetBalance(addr)
 		if err3 != nil {
-			log.Infof("NewPolySyncManager get address %s nonce error %s", ks.Address, err3.Error())
+			log.Infof("NewPolySyncManager get address %s nonce error %s", addr, err3.Error())
 			continue
 		}
 
@@ -135,7 +137,6 @@ func NewPolySyncManager(cfg *config.Config, zilSdk *provider.Provider, polySdk *
 
 		privateKeys = append(privateKeys, privateKey)
 		zilSenderMap[privateKey] = privateKeyAndNonce
-
 	}
 
 	nonceManager := &NonceManager{

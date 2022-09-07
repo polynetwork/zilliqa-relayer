@@ -160,11 +160,13 @@ var runCmd = &cobra.Command{
 			return
 		}
 
+		// zil to poly
 		zilliqaManager, err := service.NewZilliqaSyncManager(cfg, zilSdk, polySdk, boltDB)
 		if err != nil {
 			log.Errorf("init zilliqamanger error: %s\n", err.Error())
 			return
 		}
+		// poly to zil
 		polyManager, err1 := service.NewPolySyncManager(cfg, zilSdk, polySdk, boltDB, cfg.ZilConfig.CrossChainManagerContract, cfg.ZilConfig.CrossChainManagerProxyContract)
 		if err1 != nil {
 			log.Errorf("init polymanager error: %s\n", err1.Error())
