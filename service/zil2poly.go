@@ -67,6 +67,7 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 
 			blockHandleResult = true
 			for s.currentHeight < blockNumber {
+				s.dumpPendingHeaders()
 				if !s.handleNewBlock(s.currentHeight + 1) {
 					break
 				}
@@ -74,6 +75,7 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
+					s.dumpPendingHeaders()
 					if res := s.commitHeader(); res != 0 {
 						log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d", res)
 						blockHandleResult = false
@@ -153,6 +155,7 @@ T:
 	if len(raw) == 0 || !bytes.Equal(raw, blockHash) {
 		s.header4sync = append(s.header4sync, rawBlock)
 	}
+	s.dumpPendingHeaders()
 	return true
 }
 
@@ -371,6 +374,21 @@ func (this *CrossTransfer) Deserialization(source *common.ZeroCopySource) error 
 	this.toChain = toChain
 	this.height = height
 	return nil
+}
+
+func (s *ZilliqaSyncManager) dumpPendingHeaders() {
+	log.Infof("ZilliqaSyncManager pending headers ------**-*")
+	for _, raw := range s.header4sync {
+		var block core.TxBlockOrDsBlock
+		_ = json.Unmarshal(raw, &block)
+		if block.TxBlock != nil {
+			log.Infof("ZilliqaSyncManager txBlk %d", block.TxBlock.BlockHeader.BlockNum)
+		}
+		if block.DsBlock != nil {
+			log.Infof("ZilliqaSyncManager dsBlk %d", block.DsBlock.BlockHeader.BlockNum)
+		}
+	}
+	log.Infof("ZilliqaSyncManager pending headers ======**=*")
 }
 
 func (s *ZilliqaSyncManager) commitHeader() int {
