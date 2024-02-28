@@ -21,6 +21,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
 	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
@@ -29,10 +34,6 @@ import (
 	autils "github.com/polynetwork/poly/native/service/utils"
 	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
-	"math/big"
-	"strconv"
-	"strings"
-	"time"
 )
 
 /**
