@@ -21,6 +21,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/Zilliqa/gozilliqa-sdk/bech32"
 	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/util"
@@ -29,10 +34,6 @@ import (
 	autils "github.com/polynetwork/poly/native/service/utils"
 	"github.com/polynetwork/zilliqa-relayer/tools"
 	log "github.com/sirupsen/logrus"
-	"math/big"
-	"strconv"
-	"strings"
-	"time"
 )
 
 /**
@@ -149,7 +150,7 @@ T:
 	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(blockHash))
 	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	if len(raw) == 0 || bytes.Equal(raw, blockHash) {
+	if len(raw) == 0 || !bytes.Equal(raw, blockHash) {
 		s.header4sync = append(s.header4sync, rawBlock)
 	}
 	return true
