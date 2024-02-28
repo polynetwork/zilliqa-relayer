@@ -420,6 +420,11 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 			return 0
 		} else {
 			log.Errorf("ZilliqaSyncManager commitHeader - send transaction to poly chain err: %s", errDesc)
+			log.Info("ZilliqaSyncManager - Raw data ****** ")
+			for _, raw := range s.header4sync {
+				log.Infof(string(raw[:]))
+			}
+			log.Infof("ZilliqaSyncManager - Raw data ends ====== ")
 			return 1
 		}
 	}
