@@ -397,7 +397,9 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 		var block core.TxBlockOrDsBlock
 		_ = json.Unmarshal(raw, &block)
 		if block.TxBlock != nil {
-			log.Infof("ZilliqaSyncManager commitHeader - about to commit tx block: %d\n", block.TxBlock.BlockHeader.BlockNum)
+			log.Infof("ZilliqaSyncManager commitHeader - about to commit tx block: %d from DS %d \n", block.TxBlock.BlockHeader.BlockNum,
+				block.TxBlock.BlockHeader.DSBlockNum)
+			s.checkDSBlockInStorage(block.TxBlock.BlockHeader.DSBlockNum)
 		}
 
 		if block.DsBlock != nil {
