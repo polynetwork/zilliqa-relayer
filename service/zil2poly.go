@@ -402,6 +402,7 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 
 		if block.DsBlock != nil {
 			log.Infof("ZilliqaSyncManager commitHeader - about to commit ds block: %d\n", block.DsBlock.BlockHeader.BlockNum)
+			s.checkDSBlockInStorage(block.DsBlock.BlockHeader.BlockNum)
 		}
 	}
 

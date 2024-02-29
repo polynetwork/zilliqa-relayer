@@ -121,6 +121,7 @@ func (s *ZilliqaSyncManager) init() error {
 		s.currentHeight = latestHeight
 	}
 	log.Infof("ZilliqaSyncManager init - start height: %d", s.currentHeight)
+	s.getGenesisHeader()
 
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(s.currentHeight, 10))
 	if err != nil {
@@ -130,6 +131,43 @@ func (s *ZilliqaSyncManager) init() error {
 	s.currentDsBlockNum = dsBlockNum
 	log.Infof("ZilliqaSyncManager init - current ds block height is: %d\n", s.currentDsBlockNum)
 	return nil
+}
+
+func (s *ZilliqaSyncManager) getGenesisHeader() {
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
+	key := append([]byte(scom.GENESIS_HEADER), sideChainIdBytes[:]...)
+	contractAddress := autils.HeaderSyncContractAddress
+	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
+	if err != nil {
+		log.Printf("cannot obtain latest genesis header\n")
+	}
+	if result == nil || len(result) == 0 {
+		log.Printf("0-length result from gensis header query\n")
+	}
+	log.Printf("----- GENESIS HEADER ----- \n")
+	for _, b := range result {
+		log.Printf("%02x ", b)
+	}
+	log.Print("====== END GENESIS HEADER ===== \n")
+}
+
+func (s *ZilliqaSyncManager) checkDSBlockInStorage(blk uint64) {
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
+	var blkc [8]byte
+	binary.LittleEndian.PutUint64(blkc[:], blk)
+	key := append(sideChainIdBytes[:], []byte("dsComm")...)
+	key = append(key, blkc[:]...)
+	result, err := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(), key)
+	if err != nil {
+		log.Printf("Couldn't retrieve polynet storage for DS Block %d: %s", blk, err.Error())
+	}
+	if result == nil || len(result) == 0 {
+		log.Printf("no DSC stored for ds block %d", blk)
+	} else {
+		log.Printf("Something there for ds block %d", blk)
+	}
 }
 
 func (s *ZilliqaSyncManager) findLatestTxBlockHeight() uint64 {
