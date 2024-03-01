@@ -178,6 +178,16 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 			}
 		}
 		log.Infof("XXX Done")
+		s.scanForDsCommittees(dsBlockNum)
+	}
+}
+
+func (s *ZilliqaSyncManager) scanForDsCommittees(seedBlk uint64) {
+	for i := -32; i < 32; i += 1 {
+		toSearch := int(seedBlk) + i
+		log.Infof("==== Is there a DSC for %d? ", toSearch)
+		s.checkDSBlockInStorage(uint64(toSearch))
+		log.Infof("---- NEXT DSC")
 	}
 }
 
