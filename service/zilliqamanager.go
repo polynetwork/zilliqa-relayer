@@ -19,8 +19,10 @@ package service
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"github.com/Zilliqa/gozilliqa-sdk/account"
+	"github.com/Zilliqa/gozilliqa-sdk/core"
 	"github.com/Zilliqa/gozilliqa-sdk/provider"
 	poly "github.com/polynetwork/poly-go-sdk"
 	sdk "github.com/polynetwork/poly-go-sdk"
@@ -146,10 +148,31 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 		log.Infof("0-length result from gensis header query\n")
 	}
 	// Turns out the genesis header is a string.
+	block := new(core.TxBlock)
 	genesisString := string(result[:])
 	log.Infof("----- GENESIS HEADER ----- \n")
 	log.Infof("%s", genesisString)
 	log.Infof("====== END GENESIS HEADER ===== \n")
+	err = json.Unmarshal(result, block)
+	if err != nil {
+		log.Infof("!!!!! Could not unmarshal genesis - %s", err)
+	} else {
+		log.Infof("Get main chain for %d", block.BlockHeader.BlockNum)
+		s.getMainChain(block.BlockHeader.BlockNum)
+		log.Infof("GetHeaderIndex for %d:%x", block.BlockHeader.BlockNum, block.BlockHash)
+		s.getHeaderIndex(block.BlockHeader.BlockNum, block.BlockHash[:])
+		dsBlockNum := block.BlockHeader.DSBlockNum
+		log.Infof("Get DS Block %d from chain", dsBlockNum)
+		dsb, err := s.zilSdk.GetDsBlock(strconv.Itoa(int(dsBlockNum)))
+		if err != nil {
+			log.Infof("Could not get DS Block - %s", err)
+		} else {
+			dsbval := core.NewDsBlockFromDsBlockT(dsb)
+			log.Infof("getDsBlockHeader %x", dsbval.BlockHash)
+			s.getDsBlockHeader(dsBlockNum, dsbval.BlockHash[:])
+		}
+		log.Infof("XXX Done")
+	}
 }
 
 // Get the DS Block Header
