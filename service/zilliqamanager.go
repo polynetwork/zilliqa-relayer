@@ -162,6 +162,8 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 		log.Infof("GetHeaderIndex for %d:%x", block.BlockHeader.BlockNum, block.BlockHash)
 		s.getHeaderIndex(block.BlockHeader.BlockNum, block.BlockHash[:])
 		dsBlockNum := block.BlockHeader.DSBlockNum
+		log.Infof("Get DsComm %d from polynet", dsBlockNum)
+		s.checkDSBlockInStorage(dsBlockNum)
 		log.Infof("Get DS Block %d from chain", dsBlockNum)
 		dsb, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(dsBlockNum, 10))
 		if err != nil {
@@ -248,12 +250,12 @@ func (s *ZilliqaSyncManager) checkDSBlockInStorage(blk uint64) {
 	key = append(key, blkc[:]...)
 	result, err := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(), key)
 	if err != nil {
-		log.Infof("Couldn't retrieve polynet storage for DS Block %d: %s", blk, err.Error())
+		log.Infof("XXXX Couldn't retrieve polynet storage for DS Block %d: %s", blk, err.Error())
 	}
 	if result == nil || len(result) == 0 {
-		log.Infof("no DSC stored for ds block %d", blk)
+		log.Infof("XXXX no DSC stored for ds block %d", blk)
 	} else {
-		log.Infof("Something there for ds block %d", blk)
+		log.Infof("==== DSC for DS block %d is %x", blk, result)
 	}
 }
 
