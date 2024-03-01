@@ -400,11 +400,14 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 			log.Infof("ZilliqaSyncManager commitHeader - about to commit tx block: %d from DS %d \n", block.TxBlock.BlockHeader.BlockNum,
 				block.TxBlock.BlockHeader.DSBlockNum)
 			s.checkDSBlockInStorage(block.TxBlock.BlockHeader.DSBlockNum)
+			s.getHeaderIndex(block.TxBlock.BlockHeader.BlockNum, block.TxBlock.BlockHash[:])
+			s.getMainChain(block.TxBlock.BlockHeader.BlockNum)
 		}
 
 		if block.DsBlock != nil {
 			log.Infof("ZilliqaSyncManager commitHeader - about to commit ds block: %d\n", block.DsBlock.BlockHeader.BlockNum)
 			s.checkDSBlockInStorage(block.DsBlock.BlockHeader.BlockNum)
+			s.getDsBlockHeader(block.DsBlock.BlockHeader.BlockNum, block.DsBlock.BlockHash[:])
 		}
 	}
 
