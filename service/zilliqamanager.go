@@ -140,16 +140,16 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 	contractAddress := autils.HeaderSyncContractAddress
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
 	if err != nil {
-		log.Printf("cannot obtain latest genesis header\n")
+		log.Infof("cannot obtain latest genesis header\n")
 	}
 	if result == nil || len(result) == 0 {
-		log.Printf("0-length result from gensis header query\n")
+		log.Infof("0-length result from gensis header query\n")
 	}
 	// Turns out the genesis header is a string.
 	genesisString := string(result[:])
-	log.Printf("----- GENESIS HEADER ----- \n")
-	log.Printf("%s", genesisString)
-	log.Print("====== END GENESIS HEADER ===== \n")
+	log.Infof("----- GENESIS HEADER ----- \n")
+	log.Infof("%s", genesisString)
+	log.Infof("====== END GENESIS HEADER ===== \n")
 }
 
 // Get the DS Block Header
@@ -160,14 +160,14 @@ func (s *ZilliqaSyncManager) getDsBlockHeader(dsBlkNum uint64, hash []byte) {
 	key = append(key, hash...)
 	contractAddress := autils.HeaderSyncContractAddress
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
-	log.Printf("---- DS Header hash with blknum %d hash %x", dsBlkNum, hash)
+	log.Infof("---- DS Header hash with blknum %d hash %x", dsBlkNum, hash)
 	if err != nil {
-		log.Printf("==== FAILED %s", err)
+		log.Infof("==== FAILED %s", err)
 	}
 	if result == nil || len(result) == 0 {
-		log.Printf("==== 0-length or empty result")
+		log.Infof("==== 0-length or empty result")
 	} else {
-		log.Printf("==== Retrieved: %x", result)
+		log.Infof("==== Retrieved: %x", result)
 	}
 
 }
@@ -182,14 +182,14 @@ func (s *ZilliqaSyncManager) getMainChain(blknum uint64) {
 	key = append(key, blkNumBytes[:]...)
 	contractAddress := autils.HeaderSyncContractAddress
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
-	log.Printf("---- MAIN_CHAIN with blknum %d", blknum)
+	log.Infof("---- MAIN_CHAIN with blknum %d", blknum)
 	if err != nil {
-		log.Printf("==== FAILED %s", err)
+		log.Infof("==== FAILED %s", err)
 	}
 	if result == nil || len(result) == 0 {
-		log.Printf("==== 0-length or empty result")
+		log.Infof("==== 0-length or empty result")
 	} else {
-		log.Printf("==== Retrieved: %x", result)
+		log.Infof("==== Retrieved: %x", result)
 	}
 }
 
@@ -201,14 +201,14 @@ func (s *ZilliqaSyncManager) getHeaderIndex(blknum uint64, hash []byte) {
 	key = append(key, hash...)
 	contractAddress := autils.HeaderSyncContractAddress
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
-	log.Printf("---- Header hash with blknum %d hash %x", blknum, hash)
+	log.Infof("---- Header hash with blknum %d hash %x", blknum, hash)
 	if err != nil {
-		log.Printf("==== FAILED %s", err)
+		log.Infof("==== FAILED %s", err)
 	}
 	if result == nil || len(result) == 0 {
-		log.Printf("==== 0-length or empty result")
+		log.Infof("==== 0-length or empty result")
 	} else {
-		log.Printf("==== Retrieved: %x", result)
+		log.Infof("==== Retrieved: %x", result)
 	}
 }
 
@@ -221,12 +221,12 @@ func (s *ZilliqaSyncManager) checkDSBlockInStorage(blk uint64) {
 	key = append(key, blkc[:]...)
 	result, err := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(), key)
 	if err != nil {
-		log.Printf("Couldn't retrieve polynet storage for DS Block %d: %s", blk, err.Error())
+		log.Infof("Couldn't retrieve polynet storage for DS Block %d: %s", blk, err.Error())
 	}
 	if result == nil || len(result) == 0 {
-		log.Printf("no DSC stored for ds block %d", blk)
+		log.Infof("no DSC stored for ds block %d", blk)
 	} else {
-		log.Printf("Something there for ds block %d", blk)
+		log.Infof("Something there for ds block %d", blk)
 	}
 }
 
@@ -239,7 +239,7 @@ func (s *ZilliqaSyncManager) findLatestTxBlockHeight() uint64 {
 	// try to get storage
 	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
 	if err != nil {
-		log.Printf("get latest tx block from poly failed,err: %s\n", err.Error())
+		log.Infof("get latest tx block from poly failed,err: %s\n", err.Error())
 		return 0
 	}
 	if result == nil || len(result) == 0 {
