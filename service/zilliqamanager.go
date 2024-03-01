@@ -163,13 +163,17 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 		s.getHeaderIndex(block.BlockHeader.BlockNum, block.BlockHash[:])
 		dsBlockNum := block.BlockHeader.DSBlockNum
 		log.Infof("Get DS Block %d from chain", dsBlockNum)
-		dsb, err := s.zilSdk.GetDsBlock(strconv.Itoa(int(dsBlockNum)))
+		dsb, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(dsBlockNum, 10))
 		if err != nil {
 			log.Infof("Could not get DS Block - %s", err)
 		} else {
-			dsbval := core.NewDsBlockFromDsBlockT(dsb)
-			log.Infof("getDsBlockHeader %x", dsbval.BlockHash)
-			s.getDsBlockHeader(dsBlockNum, dsbval.BlockHash[:])
+			if dsb == nil {
+				log.Infof("nil DS Block %s", strconv.Itoa(int(dsBlockNum)))
+			} else {
+				dsbval := core.NewDsBlockFromDsBlockT(dsb)
+				log.Infof("getDsBlockHeader %x", dsbval.BlockHash)
+				s.getDsBlockHeader(dsBlockNum, dsbval.BlockHash[:])
+			}
 		}
 		log.Infof("XXX Done")
 	}
