@@ -122,7 +122,7 @@ func (s *ZilliqaSyncManager) init() error {
 	}
 	log.Infof("ZilliqaSyncManager init - start height: %d", s.currentHeight)
 	s.getGenesisHeader()
-
+	s.getMainChain(latestHeight)
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(s.currentHeight, 10))
 	if err != nil {
 		return fmt.Errorf("ZilliqaSyncManager init - get tx block error: %s", err.Error())
@@ -145,11 +145,71 @@ func (s *ZilliqaSyncManager) getGenesisHeader() {
 	if result == nil || len(result) == 0 {
 		log.Printf("0-length result from gensis header query\n")
 	}
+	// Turns out the genesis header is a string.
+	genesisString := string(result[:])
 	log.Printf("----- GENESIS HEADER ----- \n")
-	for _, b := range result {
-		log.Printf("%02x ", b)
-	}
+	log.Printf("%s", genesisString)
 	log.Print("====== END GENESIS HEADER ===== \n")
+}
+
+// Get the DS Block Header
+func (s *ZilliqaSyncManager) getDsBlockHeader(dsBlkNum uint64, hash []byte) {
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
+	key := append([]byte(scom.HEADER_INDEX), sideChainIdBytes[:]...)
+	key = append(key, hash...)
+	contractAddress := autils.HeaderSyncContractAddress
+	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
+	log.Printf("---- DS Header hash with blknum %d hash %x", dsBlkNum, hash)
+	if err != nil {
+		log.Printf("==== FAILED %s", err)
+	}
+	if result == nil || len(result) == 0 {
+		log.Printf("==== 0-length or empty result")
+	} else {
+		log.Printf("==== Retrieved: %x", result)
+	}
+
+}
+
+// Given a tx block number, try to obtain MAIN_CHAIN
+func (s *ZilliqaSyncManager) getMainChain(blknum uint64) {
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
+	key := append([]byte(scom.MAIN_CHAIN), sideChainIdBytes[:]...)
+	var blkNumBytes [8]byte
+	binary.LittleEndian.PutUint64(blkNumBytes[:], blknum)
+	key = append(key, blkNumBytes[:]...)
+	contractAddress := autils.HeaderSyncContractAddress
+	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
+	log.Printf("---- MAIN_CHAIN with blknum %d", blknum)
+	if err != nil {
+		log.Printf("==== FAILED %s", err)
+	}
+	if result == nil || len(result) == 0 {
+		log.Printf("==== 0-length or empty result")
+	} else {
+		log.Printf("==== Retrieved: %x", result)
+	}
+}
+
+// Given a tx block hash, see if the header index is in storage.
+func (s *ZilliqaSyncManager) getHeaderIndex(blknum uint64, hash []byte) {
+	var sideChainIdBytes [8]byte
+	binary.LittleEndian.PutUint64(sideChainIdBytes[:], s.cfg.ZilConfig.SideChainId)
+	key := append([]byte(scom.HEADER_INDEX), sideChainIdBytes[:]...)
+	key = append(key, hash...)
+	contractAddress := autils.HeaderSyncContractAddress
+	result, err := s.polySdk.GetStorage(contractAddress.ToHexString(), key)
+	log.Printf("---- Header hash with blknum %d hash %x", blknum, hash)
+	if err != nil {
+		log.Printf("==== FAILED %s", err)
+	}
+	if result == nil || len(result) == 0 {
+		log.Printf("==== 0-length or empty result")
+	} else {
+		log.Printf("==== Retrieved: %x", result)
+	}
 }
 
 func (s *ZilliqaSyncManager) checkDSBlockInStorage(blk uint64) {
