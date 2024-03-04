@@ -124,6 +124,17 @@ T:
 		goto T
 	}
 	if txBlock.BlockHeader.DSBlockNum > s.currentDsBlockNum {
+		// as we can't control the order how the header4sync on the poly
+		// nodes after we sent it across,
+		// this will ensure that all the TXBlock for a given DSBlock are synced before
+		// we proceed with the next dsblock.
+		log.Infof("ZilliqaSyncManager - new DsBlock %d", txBlock.BlockHeader.DSBlockNum)
+		log.Infof("ZilliqaSyncManager - sync all the txblock for %d", s.currentDsBlockNum)
+		if res := s.commitHeader(); res != 0 {
+			log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d", res)
+			return false
+		}
+
 		log.Infof("ZilliqaSyncManager - handleBlockHeader query ds block: %d\n", txBlock.BlockHeader.DSBlockNum)
 		dsBlock, err := s.zilSdk.GetDsBlockVerbose(strconv.FormatUint(txBlock.BlockHeader.DSBlockNum, 10))
 		if err != nil {
