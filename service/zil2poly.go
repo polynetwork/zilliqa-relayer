@@ -234,6 +234,8 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
+	// remove later
+	return nil
 	log.Infof("ZilliqaSyncManager handleLockDepositEvents - height is %d", height)
 	retryList, err := s.db.GetAllRetry()
 	if err != nil {
@@ -426,6 +428,9 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 		}
 	}
 
+	// remove after the first run
+	log.Infof("ZilliqaSyncManager commitHeader - exit without sync")
+	return 1
 	tx, err := s.polySdk.Native.Hs.SyncBlockHeader(
 		s.cfg.ZilConfig.SideChainId,
 		s.polySigner.Address,
