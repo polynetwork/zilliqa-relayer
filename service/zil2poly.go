@@ -152,7 +152,7 @@ T:
 	log.Infof("ZilliqaSyncManager handleBlockHeader - header hash: %s\n", util.EncodeHex(blockHash))
 	raw, _ := s.polySdk.GetStorage(autils.HeaderSyncContractAddress.ToHexString(),
 		append(append([]byte(scom.MAIN_CHAIN), autils.GetUint64Bytes(s.cfg.ZilConfig.SideChainId)...), autils.GetUint64Bytes(height)...))
-	if len(raw) == 0 || !bytes.Equal(raw, blockHash) {
+	if len(raw) == 0 || bytes.Equal(raw, blockHash) {
 		s.header4sync = append(s.header4sync, rawBlock)
 	}
 	s.dumpPendingHeaders()
