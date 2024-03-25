@@ -40,7 +40,12 @@ After creation, you need to register it as a Relayer to Poly net and get consens
 
 Before running, you need feed the configuration file `config.yaml`.
 
+`practice_only: true` will stop the relayer sending any actual transactions - it just prints what it would have done.
+`debug: true` will produce a bunch of debug info useful when debugging ZilBridge sync.
+
 ```yaml
+practice_only: false
+debug: true
 zil_config:
   zil_api: https://api.zilliqa.com
   zil_chain_id: 111

@@ -52,9 +52,11 @@ type ZilliqaSyncManager struct {
 	db                       *db.BoltDB
 	exitChan                 chan int
 	header4sync              [][]byte
+	debugInfo                bool
+	practiceOnly             bool
 }
 
-func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysdk *sdk.PolySdk, boltDB *db.BoltDB) (*ZilliqaSyncManager, error) {
+func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysdk *sdk.PolySdk, boltDB *db.BoltDB, debugInfo bool, practiceOnly bool) (*ZilliqaSyncManager, error) {
 	var wallet *sdk.Wallet
 	var err error
 	if !common.FileExisted(cfg.PolyConfig.PolyWalletFile) {
@@ -92,6 +94,8 @@ func NewZilliqaSyncManager(cfg *config.Config, zilSdk *provider.Provider, polysd
 		crossChainManagerAddress: cfg.ZilConfig.CrossChainManagerContract,
 		polySigner:               signer,
 		polySdk:                  polysdk,
+		debugInfo:                debugInfo,
+		practiceOnly:             practiceOnly,
 	}
 
 	err = zilliqaSyncManager.init()
@@ -123,8 +127,10 @@ func (s *ZilliqaSyncManager) init() error {
 		s.currentHeight = latestHeight
 	}
 	log.Infof("ZilliqaSyncManager init - start height: %d", s.currentHeight)
-	s.getGenesisHeader()
-	s.getMainChain(latestHeight)
+	if s.debugInfo {
+		s.getGenesisHeader()
+		s.getMainChain(latestHeight)
+	}
 	txBlockT, err := s.zilSdk.GetTxBlockVerbose(strconv.FormatUint(s.currentHeight, 10))
 	if err != nil {
 		return fmt.Errorf("ZilliqaSyncManager init - get tx block error: %s", err.Error())

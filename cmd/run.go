@@ -86,6 +86,10 @@ var runCmd = &cobra.Command{
 	Short: "Run zilliqa relayer",
 	Long:  `Run zilliqa relayer`,
 	Run: func(cmd *cobra.Command, args []string) {
+		viper.SetDefault("debug", false)
+		viper.SetDefault("practiceOnly", false)
+		debugInfo := viper.GetBool("debug")
+		practiceOnly := viper.GetBool("practice_only")
 		zilConfigMap := viper.GetStringMap("zil_config")
 		targetContractsPath := viper.GetString("target_contracts")
 		dbPath := viper.GetString("db_path")
@@ -161,7 +165,7 @@ var runCmd = &cobra.Command{
 		}
 
 		// zil to poly
-		zilliqaManager, err := service.NewZilliqaSyncManager(cfg, zilSdk, polySdk, boltDB)
+		zilliqaManager, err := service.NewZilliqaSyncManager(cfg, zilSdk, polySdk, boltDB, debugInfo, practiceOnly)
 		if err != nil {
 			log.Errorf("init zilliqamanger error: %s\n", err.Error())
 			return
