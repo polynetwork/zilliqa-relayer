@@ -67,7 +67,9 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 
 			blockHandleResult = true
 			for s.currentHeight < blockNumber {
-				s.dumpPendingHeaders()
+				if s.debugInfo {
+					s.dumpPendingHeaders()
+				}
 				if !s.handleNewBlock(s.currentHeight + 1) {
 					break
 				}
@@ -75,7 +77,9 @@ func (s *ZilliqaSyncManager) MonitorChain() {
 
 				if uint32(len(s.header4sync)) > s.cfg.ZilConfig.ZilHeadersPerBatch {
 					log.Infof("ZilliqaSyncManager MonitorChain - commit header")
-					s.dumpPendingHeaders()
+					if s.debugInfo {
+						s.dumpPendingHeaders()
+					}
 					if res := s.commitHeader(); res != 0 {
 						log.Errorf("ZilliqaSyncManager MonitorChain -- commit header error, result %d", res)
 						blockHandleResult = false
@@ -166,7 +170,9 @@ T:
 	if len(raw) == 0 || !bytes.Equal(raw, blockHash) {
 		s.header4sync = append(s.header4sync, rawBlock)
 	}
-	s.dumpPendingHeaders()
+	if s.debugInfo {
+		s.dumpPendingHeaders()
+	}
 	return true
 }
 
@@ -234,8 +240,9 @@ func (s *ZilliqaSyncManager) fetchLockDepositEvents(height uint64) bool {
 }
 
 func (s *ZilliqaSyncManager) handleLockDepositEvents(height uint64) error {
-	// remove later
-	return nil
+	if s.practiceOnly {
+		return nil
+	}
 	log.Infof("ZilliqaSyncManager handleLockDepositEvents - height is %d", height)
 	retryList, err := s.db.GetAllRetry()
 	if err != nil {
@@ -412,25 +419,30 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 		if block.TxBlock != nil {
 			log.Infof("ZilliqaSyncManager commitHeader - about to commit tx block: %d from DS %d \n", block.TxBlock.BlockHeader.BlockNum,
 				block.TxBlock.BlockHeader.DSBlockNum)
-			log.Infof("000 Check if DS block is in storage")
-			s.checkDSBlockInStorage(block.TxBlock.BlockHeader.DSBlockNum)
-			log.Infof("Check header index")
-			s.getHeaderIndex(block.TxBlock.BlockHeader.BlockNum, block.TxBlock.BlockHash[:])
-			log.Infof("Check main chain")
-			s.getMainChain(block.TxBlock.BlockHeader.BlockNum)
+			if s.debugInfo {
+				log.Infof("000 Check if DS block is in storage")
+				s.checkDSBlockInStorage(block.TxBlock.BlockHeader.DSBlockNum)
+				log.Infof("Check header index")
+				s.getHeaderIndex(block.TxBlock.BlockHeader.BlockNum, block.TxBlock.BlockHash[:])
+				log.Infof("Check main chain")
+				s.getMainChain(block.TxBlock.BlockHeader.BlockNum)
+			}
 		}
 
 		if block.DsBlock != nil {
 			log.Infof("ZilliqaSyncManager commitHeader - about to commit ds block: %d\n", block.DsBlock.BlockHeader.BlockNum)
-			s.checkDSBlockInStorage(block.DsBlock.BlockHeader.BlockNum)
-			log.Infof("000 check ds block hash")
-			s.getDsBlockHeader(block.DsBlock.BlockHeader.BlockNum, block.DsBlock.BlockHash[:])
+			if s.debugInfo {
+				s.checkDSBlockInStorage(block.DsBlock.BlockHeader.BlockNum)
+				log.Infof("000 check ds block hash")
+				s.getDsBlockHeader(block.DsBlock.BlockHeader.BlockNum, block.DsBlock.BlockHash[:])
+			}
 		}
 	}
 
-	// remove after the first run
-	log.Infof("ZilliqaSyncManager commitHeader - exit without sync")
-	return 1
+	if s.practiceOnly {
+		log.Infof("ZilliqaSyncManager commitHeader - exit without sync")
+		return 1
+	}
 	tx, err := s.polySdk.Native.Hs.SyncBlockHeader(
 		s.cfg.ZilConfig.SideChainId,
 		s.polySigner.Address,
@@ -446,11 +458,13 @@ func (s *ZilliqaSyncManager) commitHeader() int {
 			return 0
 		} else {
 			log.Errorf("ZilliqaSyncManager commitHeader - send transaction to poly chain err: %s", errDesc)
-			log.Info("ZilliqaSyncManager - Raw data ****** ")
-			for _, raw := range s.header4sync {
-				log.Infof(string(raw[:]))
+			if s.debugInfo {
+				log.Info("ZilliqaSyncManager - Raw data ****** ")
+				for _, raw := range s.header4sync {
+					log.Infof(string(raw[:]))
+				}
+				log.Infof("ZilliqaSyncManager - Raw data ends ====== ")
 			}
-			log.Infof("ZilliqaSyncManager - Raw data ends ====== ")
 			return 1
 		}
 	}
